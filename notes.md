@@ -74,7 +74,7 @@ On startup all pages are in the `Evicted` state
 
 * [Optimistic Lock Coupling: A Scalable and Efficient General-Purpose Synchronization Method](http://sites.computer.org/debull/A19mar/p73.pdf)
 
-### * [The ART of Practical Synchronization](https://db.in.tum.de/~leis/papers/artsync.pdf)
+### [The ART of Practical Synchronization](https://db.in.tum.de/~leis/papers/artsync.pdf)
 
 > To add support for concurrency, we initially started
 > designing a custom protocol called Read-Optimized Write Exclusion (ROWEX) [ 14 ], which turned out to be
@@ -109,13 +109,16 @@ Code:
 > • Latching coordinates threads to protect in-memory data
 > structures including page images in the buffer pool. Lock-
 > ing coordinates transactions to protect database contents.
+>
 > • Deadlock detection and resolution is usually provided for
 > transactions and locks but not for threads and latches. Dead-
 > lock avoidance for latches requires coding discipline and latch
 > acquisition requests that fail rather than wait.
+>
 > • Latching is closely related to critical sections and could
 > be supported by hardware, e.g., hardware transactional
 > memory
+>
 > -- Page 268
 
 ## In Memory Data Structures
