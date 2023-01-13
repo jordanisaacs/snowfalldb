@@ -140,8 +140,30 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 
 ## Storage Layout
 
-* [Proteus: Autonomous Adapative Storage for Mixed Workloads](https://cs.uwaterloo.ca/~mtabebe/publications/abebeProteus2022SIGMOD.pdf)
+* [The Design and Implementation of Modern Column-Oriented Database Systems](https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf)
 * [Adaptive Hybrid Indexes](https://db.in.tum.de/~anneser/ahi.pdf)
+
+###  [Proteus: Autonomous Adapative Storage for Mixed Workloads](https://cs.uwaterloo.ca/~mtabebe/publications/abebeProteus2022SIGMOD.pdf)
+
+#### Row Layout
+
+*In Memory*
+
+* Fixed-size byte array
+    * Once written, becomes read-only
+    * Size is determined by the table schema and columns in the partition
+    * Variable sized data gets 12 bytes: 4 for data size, 8 for pointer (or data itself if fits)
+    * Multi-versioned: last 8 bytes stores pointer to a byte array of the previous version of the row
+* Partition maintains an array of pointers to each row's most recent version (aka byte array)
+
+*On-Disk*
+
+* Data is divided into index & stored data entry
+    * Index contains offset into the row's data
+    * Row stored same as in-memory but variable-sized data is always inlined
+* Supports in-place updates if the data size does not change, otherwise requires rewriting the partition
+* Buffers updates in memory and batch applies them
+
 * [](https://cs.uwaterloo.ca/~mtabebe/publications/abebeThesis2022UW.pdf)
 
 # Postgres Design
@@ -171,14 +193,61 @@ Uses the exmap kernel module with vmcache implemented over it.
 * Concurrency: exclusive writes, shared reads, and optimistic reads.
     * Goes to sleep (parking lot method) when cannot gain an exclusive write or shared read
 
+### Optimistic Reads
+
+Optimistic reads on vmcache+exmap can result in a segfault. This is because during the read the page may be evicted. Thus we need to handle the segfault somehow. Either through the `SIGSEGV` signal or a `userfaultfd`.
+
+Need to do both and benchmark:
+
+1. Perform the entire read and cause many faults without the overhead of a signal handler
+2. Perform the read only until a segfault occurs, handle it by jumping out
+
+#### Rust signal handling and non-local jumps
+
+Links:
+* [How setjmp and longjmp work](https://offlinemark.com/2016/02/09/lets-understand-setjmp-longjmp/)
+* [Working with signals in Rust - some things that signal handlers can't handle](https://www.jameselford.com/blog/working-with-signals-in-rust-pt1-whats-a-signal/)
+
+My port of musl setjmp/longjmp to rust: [sjlj](https://github.com/jordanisaacs/sjlj)
+
+Safety of setjmp/longjmp:
+
+* The [Plain Old Frame](https://blog.rust-lang.org/inside-rust/2021/01/26/ffi-unwind-longjmp.html) are frames that can be trivially deallocated. A function that calls `setjmp` cannot have any destructors.
+* Also take care for [returning twice](https://github.com/rust-lang/rfcs/issues/2625) and doing volatile read/writes if that is the case
+
+From [anonymous]: 
+
+> you can't longjmp in a signal handler because you need to either hit the return trampoline
+> or sigreturn you can modify the sigcontext to resume your setlongjmp-style context instead though
+
+Tidbit on the return trampoline
+
+> when the kernel delivers a signal it creates a new stack to run your handler on.
+> libcs will set the return address for the stack (or the link register on other architectures etc)
+> to be a "trampoline" which is just a small snippet that calls sigreturn so that returning
+> from the handler resumes execution of your program correctly.
+> [link to linux kernel](https://github.com/torvalds/linux/blob/d6c338a741295c04ed84679153448b2fffd2c9cf/arch/x86/um/signal.c#L360).
+> it's that signal registering sets SA_RESTORER which the kernel sets as the return address for the signal handler stack,
+> and im pretty sure libcs just have their sigaction etc always set SA_RESTORER to their sigreturn trampoline
+
+Rather than using `longjmp`, restore the `jmp_buf` into `sigcontext`.
+
+#### Userfaultfd
+
+`man 2 userfaultd`
+
+File descriptor that handles page faults in user space. Alternative to signal handling and setjmp + sigcontext.
+
 ## Index
 
-Going to use a btree for indexing.
+BTree for indexing (what type?)
 
 * Optimistic lock coupling (The ART and Optimistic Lock Coupling paper)
 * Contention management
 
 ## Page layout
+
+### 
 
 Hybrid storage layout (proteus?)
 
