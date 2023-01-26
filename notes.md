@@ -195,22 +195,18 @@ Uses the exmap kernel module with vmcache implemented over it.
 
 ### Optimistic Reads
 
-Optimistic reads on vmcache+exmap can result in a segfault. This is because during the read the page may be evicted. Thus we need to handle the segfault somehow. Either through the `SIGSEGV` signal or a `userfaultfd`.
+Optimistic reads on vmcache+exmap can result in a segfault. This is because during the read the page may be evicted. Thus we need to handle the segfault. Use `sigsetjmp` and `siglongjmp` from a `SIGSEGV` handler.
 
-Need to do both and benchmark:
-
-1. Perform the entire read and cause many faults without the overhead of a signal handler
-2. Perform the read only until a segfault occurs, handle it by jumping out
-
-#### Rust signal handling and non-local jumps
+#### Signal handling and non-local jumps
 
 Links:
 * [How setjmp and longjmp work](https://offlinemark.com/2016/02/09/lets-understand-setjmp-longjmp/)
 * [Working with signals in Rust - some things that signal handlers can't handle](https://www.jameselford.com/blog/working-with-signals-in-rust-pt1-whats-a-signal/)
+* [Unwinding through a signal handler](https://maskray.me/blog/2022-04-10-unwinding-through-signal-handler)
 
 My port of musl setjmp/longjmp to rust: [sjlj](https://github.com/jordanisaacs/sjlj)
 
-Safety of setjmp/longjmp:
+Safety of setjmp/longjmp in Rust:
 
 * The [Plain Old Frame](https://blog.rust-lang.org/inside-rust/2021/01/26/ffi-unwind-longjmp.html) are frames that can be trivially deallocated. A function that calls `setjmp` cannot have any destructors.
 * Also take care for [returning twice](https://github.com/rust-lang/rfcs/issues/2625) and doing volatile read/writes if that is the case
@@ -230,13 +226,13 @@ Tidbit on the return trampoline
 > it's that signal registering sets SA_RESTORER which the kernel sets as the return address for the signal handler stack,
 > and im pretty sure libcs just have their sigaction etc always set SA_RESTORER to their sigreturn trampoline
 
-Rather than using `longjmp`, restore the `jmp_buf` into `sigcontext`.
+Do not need to care about the trampoline because not using libc. At least in musl, the `SA_RESTORER` function is just the `sigreturn` syscall. It is not necessary to call `sigreturn` from a signal. It seems that the handler is not called if no `SA_RESTORER` is provided so just do it like musl with a single call to `sigreturn`.
 
 #### Userfaultfd
 
 `man 2 userfaultd`
 
-File descriptor that handles page faults in user space. Alternative to signal handling and setjmp + sigcontext.
+File descriptor that handles page faults in user space. This is not suitable for our use case of optimistic reads because it is meant for page fault handling. The userfaultfd is polled from a second thread. When a fault occurs the faulting thread goes to sleep. The userfaultfd reader is expected to load the page in. This is not what we want as we need to accept the fault and jump out of the read (a non-local goto).
 
 ## Index
 
