@@ -20,7 +20,9 @@ Using it to investigate sqlite performance: [link](https://brunocalza.me/p/ff33a
 
 Linux portion that was yanked out of vmtouch: [link](https://gist.github.com/tvaleev/c3489f8a25449fcefac5847cdb05cb3c)
 
-Powered by the [mincore](https://man7.org/linux/man-pages/man2/mincore.2.html) syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
+`man 2 mincore`
+
+Powered by the `mincore` syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
 
 # I/O
 
@@ -35,6 +37,8 @@ The block layer is the part of the kernel that implements the interface that app
 
 [Block-device snapshots with with blksnap module](https://lwn.net/Articles/914031/)
 
+[Linux Kernel Labs - Block Device Drivers](https://linux-kernel-labs.github.io/refs/heads/master/labs/block_device_drivers.html)
+
 ## [SPDK](https://spdk.io/doc/)
 
 **All userspace*
@@ -47,13 +51,47 @@ It does this by telling the OS to relinquish control. Done by [writing to a file
 
 Once unbound, OS can't use the device anymore: eg `/dev/nvme0n1` dissapears. SPDK provides re-imagined implementations of most layers in the typical OS storage stack as c libraries.
 
-A TiKV article on using SPDK: [link](https://www.pingcap.com/blog/tikv-and-spdk-pushing-the-limits-of-storage-performance/)
+A TiKV article on using SPDK BlobFS: [link](https://www.pingcap.com/blog/tikv-and-spdk-pushing-the-limits-of-storage-performance/)
 
 [SPDK BDev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2209.pdf) - A full block device layer in userspace called `bdev`
 
-## [io-uring]()
+## [xnvme](https://xnvme.io/)
+
+[Paper](https://dl.acm.org/doi/10.1145/3534056.3534936)
+
+Provides a cross-platform user-space library that is I/O interface independent. Includes backends of its API for SPDK, io_uring, libaio, and more. According to the paper it has negligible cost.
+
+Designed to be rapidly iterable to include new NVMe features.
+
+## [Enabling Asynchronous I/O Passthru in NVMe-Native Applications](https://www.snia.org/educational-library/enabling-asynchronous-i-o-passthru-nvme-native-applications-2021)
 
 TODO
+
+## [HeuristicDB: A Hybrid Storage Database System Using a Non-Volatile Memory Block Device](https://dl.acm.org/doi/pdf/10.1145/3456727.3463774)
+
+Use NVM storage as a block cache for conventional storage devices
+
+## [io-uring]()
+
+### [ioctl() for io_uring](https://lwn.net/Articles/844875/)
+
+Implement a field in the `file_operations` structure
+
+```c
+struct io_uring_cmd {
+    struct file *file;
+    struct io_uring_pdu pdu;
+    void (*done)(struct io_uring_cmd *, ssize_t);
+};
+
+int (*uring_cmd)(struct io_uring_cmd *, enum io_uring_cmd_flags);
+```
+
+Handlers should not block. Instead
+
+1. Complete immediately
+2. Return error indicating operation would block
+3. Run it asynchronously and signal completion by calling the given `done()` function
 
 ## [The Necessary Death of the Block Device Interface](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
 
@@ -63,26 +101,13 @@ TODO
 
 TODO
 
-# Linux Memory
+# QEMU
 
-## Address Types
+## Block Devices
 
-1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space
-2. Physical Addresses: used between processor and system's memory.
-3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
-4. Kernel virtual addresses: do not necessary have a linear one to one mapping to physical addresses. All logical addresses _are_ vritual addresses. `vmalloc` returns a virtual address (but no direct physical mapping)
+* [A practical look at QEMU's Block Layer Primitives](https://kashyapc.fedorapeople.org/virt/LinuxCon-NA-2016/A-Practical-Look-at-QEMU-Block-Layer-Primitives-LC-NA-2016.pdf)
+* [How to emulate block devices with qemu](https://blogs.oracle.com/post/how-to-emulate-block-devices-with-qemu)
 
-![](./address-types.png)
-
-## [VMTouch](https://hoytech.com/vmtouch/)
-
-A tool to learn and control the file-system cache on unix and unix-like systems
-
-Using it to investigate sqlite performance: [link](https://brunocalza.me/p/ff33a375-0f21-4bba-8ce2-2f472ef4e6b8/)
-
-Linux portion that was yanked out of vmtouch: [link](https://gist.github.com/tvaleev/c3489f8a25449fcefac5847cdb05cb3c)
-
-Powered by the [mincore](https://man7.org/linux/man-pages/man2/mincore.2.html) syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
 
 # Page Cache/Buffer Manager
 
