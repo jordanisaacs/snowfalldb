@@ -1,3 +1,27 @@
+# Linux Memory
+
+## Address Types
+
+1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space
+2. Physical Addresses: used between processor and system's memory.
+3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
+4. Kernel virtual addresses: do not necessary have a linear one to one mapping to physical addresses. All logical addresses _are_ vritual addresses. `vmalloc` returns a virtual address (but no direct physical mapping)
+
+![](./address-types.png)
+
+## [Kernel GFP Flags](https://lwn.net/Articles/920891/)
+
+
+## [VMTouch](https://hoytech.com/vmtouch/)
+
+A tool to learn and control the file-system cache on unix and unix-like systems
+
+Using it to investigate sqlite performance: [link](https://brunocalza.me/p/ff33a375-0f21-4bba-8ce2-2f472ef4e6b8/)
+
+Linux portion that was yanked out of vmtouch: [link](https://gist.github.com/tvaleev/c3489f8a25449fcefac5847cdb05cb3c)
+
+Powered by the [mincore](https://man7.org/linux/man-pages/man2/mincore.2.html) syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
+
 # I/O
 
 How much I/O do you want to handle in userspace vs kernel?
