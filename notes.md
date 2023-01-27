@@ -145,7 +145,76 @@ Code:
     * Used for the Bw-Tree paper
     * Include a b-tree implementation of OLC
 
+
+### [B-trees: More than I thought I'd want to know](https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know/)
+
+**Two important quantities**
+
+1. *Key comparisons*
+2. *Disk seeks*
+
+Key comparisons scales with the dataset, cannot do much to change that. But we can influence the # of key comparisons per disk seek. Done by co-locating keys together in the on-disk layout. This is where **high fanout** comes from.
+
+**Slotted Page Layout**
+
+1. The header (start of page) - metadata
+2. Offset pointers (after header) - point to cells
+2. Cells (end of page) - variable-sized "slots" for data
+
+Do not need to re-order/move data (aka cells), just the offset pointers
+
+**Lookup**
+
+Basic algorithm
+
+1. Root node
+2. Perform binary search on the *separator keys* within the node. Goo to child node
+3. Go back to step 2 if not a leaf
+4. If at leaf, get the data
+
 ### [Modern B-Tree Techniques](https://w6113.github.io/files/papers/btreesurvey-graefe.pdf)
+
+#### Basic B-Trees** (pg. 213-216):
+
+**Types of Nodes**:
+
+1. Single root
+    * Contains at least one key and two child pointers
+    * Contain separator keys
+2. Branch nodes connecting root and leaves
+    * Contain separator keys that may be equal to keys of current or former data
+    * Only requirement is to guide the search algorithm
+    * $N$ separator keys means $N + 1$ child pointers
+3. Leaf nodes
+    * Contain user data
+    * Records in leaf nodes contain a search key + associated information
+    * Associated information can be columns, a pointer, etc. (not important to this survey)
+
+* Branch + leaf nodes are at least half full at all times
+* B/c only leaf node contains user data, deletion does not affect branch nodes
+* Short separator keys increases node fan-out (# of child pointers per node)
+* Entries are kept in sorted order
+* Only child pointers are truly required, but many implementations contain neighbor pointers.
+    * Rarely a parent pointer b/c forces updates in many child nodes when parent is moved/split
+* On-disk tree tends to represent child pointers as page identifiers
+* Page headers include metadata information
+* A node is aligned to a page size
+
+**Fan-out math**:
+
+* $N$ records and $L$ records per leaf -> $N/L$ leaf nodes
+* $F$ average children per parent -> $log_F(N/L)$ branch levels
+
+Ex: 9 leaf nodes, F = 3 -> $log_3(9) = 2$. Height is either 2 or 3 depending on if including leaves. Usually round up b/c root node has different fan-out
+
+* Average space utilization is about 70%, always between 50% and 100%.
+* Often more than 99% of nodes are leaf
+
+**Algorithms**::
+
+TBD
+
+
 
 > • Latching coordinates threads to protect in-memory data
 > structures including page images in the buffer pool. Lock-
@@ -161,6 +230,10 @@ Code:
 > memory
 >
 > -- Page 268
+
+### On Disk Layout
+
+Links: [concept to internals](http://web.archive.org/web/20161221112438/http://www.toadworld.com/platforms/oracle/w/wiki/11001.oracle-b-tree-index-from-the-concept-to-internals)
 
 ## In Memory Data Structures
 
