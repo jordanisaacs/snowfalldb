@@ -1,10 +1,8 @@
-# DB Papers
-
-## I/O
+# I/O
 
 How much I/O do you want to handle in userspace vs kernel?
 
-### Linux Kernel Block Layer
+## Linux Kernel Block Layer
 
 The block layer is the part of the kernel that implements the interface that applications/filesystems use to access storage devices.
 
@@ -13,7 +11,7 @@ The block layer is the part of the kernel that implements the interface that app
 
 [Block-device snapshots with with blksnap module](https://lwn.net/Articles/914031/)
 
-### [SPDK](https://spdk.io/doc/)
+## [SPDK](https://spdk.io/doc/)
 
 **All userspace*
 
@@ -29,21 +27,42 @@ A TiKV article on using SPDK: [link](https://www.pingcap.com/blog/tikv-and-spdk-
 
 [SPDK BDev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2209.pdf) - A full block device layer in userspace called `bdev`
 
-### [io-uring]()
+## [io-uring]()
 
 TODO
 
-### [The Necessary Death of the Block Device Interface](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
+## [The Necessary Death of the Block Device Interface](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
 
 TODO
 
-### [OPTR: Order-Preserving Translation and Recovery Design for SSDs with a Standard Block Device Interface](https://www.usenix.org/system/files/atc19-chang_0.pdf)
+## [OPTR: Order-Preserving Translation and Recovery Design for SSDs with a Standard Block Device Interface](https://www.usenix.org/system/files/atc19-chang_0.pdf)
 
 TODO
 
-## Page Cache/Buffer Manager
+# Linux Memory
 
-### [Are You Sure You Want to Use MMAP in Your Database Management System?](https://db.cs.cmu.edu/mmap-cidr2022/)
+## Address Types
+
+1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space
+2. Physical Addresses: used between processor and system's memory.
+3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
+4. Kernel virtual addresses: do not necessary have a linear one to one mapping to physical addresses. All logical addresses _are_ vritual addresses. `vmalloc` returns a virtual address (but no direct physical mapping)
+
+![](./address-types.png)
+
+## [VMTouch](https://hoytech.com/vmtouch/)
+
+A tool to learn and control the file-system cache on unix and unix-like systems
+
+Using it to investigate sqlite performance: [link](https://brunocalza.me/p/ff33a375-0f21-4bba-8ce2-2f472ef4e6b8/)
+
+Linux portion that was yanked out of vmtouch: [link](https://gist.github.com/tvaleev/c3489f8a25449fcefac5847cdb05cb3c)
+
+Powered by the [mincore](https://man7.org/linux/man-pages/man2/mincore.2.html) syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
+
+# Page Cache/Buffer Manager
+
+## [Are You Sure You Want to Use MMAP in Your Database Management System?](https://db.cs.cmu.edu/mmap-cidr2022/)
 
 1. Transactional Safety
     * OS can flush dirty pages at any time, cannot prevent this
@@ -56,13 +75,13 @@ TODO
     * Each CPU core has its own TLB which can get out of sync with the page table. Thus, OS generally has to interrupt all CPU cores ("TLB Shootdown") when the page table changes.
     * Intra-kernel data structures are a scalability bottleneck
 
-### [LeanStore: In-Memory Data Management Beyond Main Memory](https://db.in.tum.de/~leis/papers/leanstore.pdf)
+## [LeanStore: In-Memory Data Management Beyond Main Memory](https://db.in.tum.de/~leis/papers/leanstore.pdf)
 
 *Pointer Swizzling*
 
-### [Virtual-Memory Assisted Buffer Management](https://www.cs.cit.tum.de/fileadmin/w00cfj/dis/_my_direct_uploads/vmcache.pdf)
+## [Virtual-Memory Assisted Buffer Management](https://www.cs.cit.tum.de/fileadmin/w00cfj/dis/_my_direct_uploads/vmcache.pdf)
 
-#### VMCache
+### VMCache
 
 1. Yes, you can exploit the virtual memory subsystem without losing control over eviciton and page fault handling (transactional safety, i/o stalls, and error handling)
 2. A bonus is can enable dynamic page sizes due to a contiguous virtual memory range (from non-contiguous physical memory)
@@ -111,11 +130,11 @@ A contiguous array with as many page state entries as pages on storage
 
 On startup all pages are in the `Evicted` state
 
-## General Synchronization
+# General Synchronization
 
 * [Optimistic Lock Coupling: A Scalable and Efficient General-Purpose Synchronization Method](http://sites.computer.org/debull/A19mar/p73.pdf)
 
-### [The ART of Practical Synchronization](https://db.in.tum.de/~leis/papers/artsync.pdf)
+## [The ART of Practical Synchronization](https://db.in.tum.de/~leis/papers/artsync.pdf)
 
 > To add support for concurrency, we initially started
 > designing a custom protocol called Read-Optimized Write Exclusion (ROWEX) [ 14 ], which turned out to be
@@ -127,7 +146,7 @@ On startup all pages are in the `Evicted` state
 > 
 > -- Page 75 from Optimistic Lock Coupling
 
-## BTree
+# BTree
 
 To Read:
 
@@ -138,6 +157,7 @@ To Read:
 * [Contention and Space Management in B-Trees](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper21.pdf)
 * [Benchmarked against Bw-Tree](https://www.cs.cmu.edu/~huanche1/publications/open_bwtree.pdf)
 * [A survey of b-tree locking techniques](https://15721.courses.cs.cmu.edu/spring2017/papers/06-latching/a16-graefe.pdf)
+* [concept to internals](http://web.archive.org/web/20161221112438/http://www.toadworld.com/platforms/oracle/w/wiki/11001.oracle-b-tree-index-from-the-concept-to-internals)
 
 Code:
 
@@ -146,7 +166,7 @@ Code:
     * Include a b-tree implementation of OLC
 
 
-### [B-trees: More than I thought I'd want to know](https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know/)
+## [B-trees: More than I thought I'd want to know](https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know/)
 
 **Two important quantities**
 
@@ -172,9 +192,9 @@ Basic algorithm
 3. Go back to step 2 if not a leaf
 4. If at leaf, get the data
 
-### [Modern B-Tree Techniques](https://w6113.github.io/files/papers/btreesurvey-graefe.pdf)
+## [Modern B-Tree Techniques](https://w6113.github.io/files/papers/btreesurvey-graefe.pdf)
 
-#### Basic B-Trees** (pg. 213-216):
+### Basic B-Trees** (pg. 213-216):
 
 **Types of Nodes**:
 
@@ -214,8 +234,6 @@ Ex: 9 leaf nodes, F = 3 -> $log_3(9) = 2$. Height is either 2 or 3 depending on 
 
 TBD
 
-
-
 > • Latching coordinates threads to protect in-memory data
 > structures including page images in the buffer pool. Lock-
 > ing coordinates transactions to protect database contents.
@@ -231,11 +249,7 @@ TBD
 >
 > -- Page 268
 
-### On Disk Layout
-
-Links: [concept to internals](http://web.archive.org/web/20161221112438/http://www.toadworld.com/platforms/oracle/w/wiki/11001.oracle-b-tree-index-from-the-concept-to-internals)
-
-## In Memory Data Structures
+# In Memory Data Structures
 
 To Read:
 
@@ -245,21 +259,21 @@ Code:
 
 * [Congee - ART-OLC concurrent adaptive radix tree](https://github.com/XiangpengHao/congee)
 
-## LSM Tree
+# LSM Tree
 
 * [Real-Time LSM-Trees for HTAP Workloads](https://arxiv.org/pdf/2101.06801.pdf)
 * [Hybrid Transactional/Analytical Processing Amplifies IO in LSM-Trees](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9940292)
 * [Revisiting the Design of LSM-tree Based OLTP Storage Engine
 with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pdf)
 
-## Storage Layout
+# Storage Layout
 
 * [The Design and Implementation of Modern Column-Oriented Database Systems](https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf)
 * [Adaptive Hybrid Indexes](https://db.in.tum.de/~anneser/ahi.pdf)
 
-###  [Proteus: Autonomous Adapative Storage for Mixed Workloads](https://cs.uwaterloo.ca/~mtabebe/publications/abebeProteus2022SIGMOD.pdf)
+##  [Proteus: Autonomous Adapative Storage for Mixed Workloads](https://cs.uwaterloo.ca/~mtabebe/publications/abebeProteus2022SIGMOD.pdf)
 
-#### Row Layout
+### Row Layout
 
 *In Memory*
 
@@ -283,19 +297,6 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 # Postgres Design
 
 [Internals](https://www.interdb.jp/pg/)
-
-# Linux Kernel
-
-Notes on kernel internals relevant to SnowfallDB (use of exmap)
-
-## Address Types
-
-1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space
-2. Physical Addresses: used between processor and system's memory.
-3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
-4. Kernel virtual addresses: do not necessary have a linear one to one mapping to physical addresses. All logical addresses _are_ vritual addresses. `vmalloc` returns a virtual address (but no direct physical mapping)
-
-![](./address-types.png)
 
 # SnowfallDB Design
 
@@ -360,4 +361,3 @@ BTree for indexing (what type?)
 ### 
 
 Hybrid storage layout (proteus?)
-
