@@ -1,5 +1,46 @@
 # DB Papers
 
+## I/O
+
+How much I/O do you want to handle in userspace vs kernel?
+
+### Linux Kernel Block Layer
+
+The block layer is the part of the kernel that implements the interface that applications/filesystems use to access storage devices.
+
+* [Part 1: the bio layer](https://lwn.net/Articles/736534/)
+* [Part 2: the request layer](https://lwn.net/Articles/738449/)
+
+[Block-device snapshots with with blksnap module](https://lwn.net/Articles/914031/)
+
+### [SPDK](https://spdk.io/doc/)
+
+**All userspace*
+
+SPDK is a way to bypass the OS and directly access an NVME storage device. It is a "user space, polled-mode, asynchronous, lockless NVME driver"
+
+Normally drivers run in kernel space. SPDK contains drivers that run in userspace but still interface directly with the hardware device.
+
+It does this by telling the OS to relinquish control. Done by [writing to a file in sysfs](https://lwn.net/Articles/143397/). Then it rebinds the device to either [uio](https://www.kernel.org/doc/html/latest/driver-api/uio-howto.html) or [vfio](https://www.kernel.org/doc/Documentation/vfio.txt) which act as "dummy drivers". Prevent the OS from attempting to re-bind. vfio is capable of programming the [IOMMU](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit) unlike uio. See [DMA from user space](https://spdk.io/doc/memory.html)
+
+Once unbound, OS can't use the device anymore: eg `/dev/nvme0n1` dissapears. SPDK provides re-imagined implementations of most layers in the typical OS storage stack as c libraries.
+
+A TiKV article on using SPDK: [link](https://www.pingcap.com/blog/tikv-and-spdk-pushing-the-limits-of-storage-performance/)
+
+[SPDK BDev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2209.pdf) - A full block device layer in userspace called `bdev`
+
+### [io-uring]()
+
+TODO
+
+### [The Necessary Death of the Block Device Interface](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
+
+TODO
+
+### [OPTR: Order-Preserving Translation and Recovery Design for SSDs with a Standard Block Device Interface](https://www.usenix.org/system/files/atc19-chang_0.pdf)
+
+TODO
+
 ## Page Cache/Buffer Manager
 
 ### [Are You Sure You Want to Use MMAP in Your Database Management System?](https://db.cs.cmu.edu/mmap-cidr2022/)
