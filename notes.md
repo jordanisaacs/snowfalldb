@@ -134,6 +134,20 @@ c-scape's [implementation](https://github.com/sunfishcode/mustang/tree/main/c-sc
 
 One issue with c-scape is that is `libc` compatible so the functions are `extern "C"`. Thus required to switch from Rust to "C" ABI, then back into rust, and then into C-like syscalls. [source](https://github.com/sunfishcode/mustang/issues/123#issue-1283959957)
 
+# Program Startup & ELF
+
+## [A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
+
+libc have a `_start` and an `_exit` routine. These provide portability for starting up and ending a program. You can create your own `_start` with the GCC option `-nostartfiles`. You need to call `_exit` though. You can use the GCC option `-nostdlib` to not link any system libraries or startup files.
+
+Can use the `exit(2)` syscall rather than the libc call.
+
+There is still the ELF file though with a large amount of overhead. There are a variety of different sections that are produced by the assembler. TODO continue notes
+
+## [How programs get run: ELF binaries](https://lwn.net/Articles/631631/)
+
+## `man 5 elf`
+
 # QEMU
 
 ## Block Devices
@@ -443,3 +457,7 @@ BTree for indexing (what type?)
 ### 
 
 Hybrid storage layout (proteus?)
+
+# Fun Links
+
+* [The Jargon File](http://www.catb.org/jargon/html/index.html)
