@@ -1,4 +1,4 @@
-# Linux Memory
+# Kernel Memory
 
 ## Address Types
 
@@ -11,6 +11,7 @@
 
 ## [Kernel GFP Flags](https://lwn.net/Articles/920891/)
 
+TODO
 
 ## [VMTouch](https://hoytech.com/vmtouch/)
 
@@ -23,6 +24,61 @@ Linux portion that was yanked out of vmtouch: [link](https://gist.github.com/tva
 `man 2 mincore`
 
 Powered by the `mincore` syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
+
+# System Calls
+
+## [Anatomy of a system call, part 1](https://lwn.net/Articles/604287/)
+
+Special instructions are needed to make the processor perform a transition to ring 0.
+Functions are addressed by number rather than address.
+
+In the kernel they are defined with the `SYSCALL_DEFINEn()` macro. It produces a `__SYSCALL_DEFINEx()` and a `SYSCALL_METADATA()` macro. The [metadata macro](https://lwn.net/Articles/604406/) builds a collection of metadata for tracing purposes (for `CONFIG_FTRACE_SYSCALLS`). The `__SYSCALL_DEFINEx()` expands to the actual syscall function. The type signatures are `long int` for correctly sign extending 32 bit values. They use the [asmlinkage](https://kernelnewbies.org/FAQ/asmlinkage) directive which tells that the function should expect arguments on the stack rather than registers.
+
+To get to the function, a syscall table is used for mapping the numbers to function pointers. Syscall tables can be implemented differently for each architecture and have different syscall number mappings.
+
+**x86_64**:
+
+Early in the kernel's [startup](https://elixir.bootlin.com/linux/v3.14/source/arch/x86/kernel/cpu/common.c#L1277) sequence calls [syscall_init](https://elixir.bootlin.com/linux/v3.14/source/arch/x86/kernel/cpu/common.c#L1134). Uses the `wrmsrl` instruction to write values to a [model-specific register](https://wiki.osdev.org/Model_Specific_Registers). Wrties to `MSR_LSTAR` which is the x86\_64 register for `SYSCALL` instructions. We set it to `system_call`.
+
+Table is accessed from the [system_call](https://elixir.bootlin.com/linux/v3.14/source/arch/x86/kernel/entry_64.S#L593) assembly entry point. Pushes various registers onto stack using `SAVE_ARGS` macro to match `asmlinkage` directive. Uses the RAX register to pick entry and then calls it.
+
+![](./syscall_x86_64.png)
+
+## [Anatomy of a system call part 2](https://lwn.net/Articles/604515/)
+
+Lays out how some other arches work and x86\_32 syscalls on x86\_64
+
+**vDSO (Virtual Dynamically-linked Shared Object)**:
+
+* Also see [Linux Journal](https://www.linuxjournal.com/content/creating-vdso-colonels-other-chicken)
+
+Some system calls read a small amount of information from the kernel, do not want the overhead of a ring transition.
+
+TODO
+
+*syscall tracing with `ptrace()`*
+
+TODO
+
+# Program Startup & ELF
+
+## [A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
+
+libc have a `_start` and an `_exit` routine. These provide portability for starting up and ending a program. You can create your own `_start` with the GCC option `-nostartfiles`. You need to call `_exit` though. You can use the GCC option `-nostdlib` to not link any system libraries or startup files.
+
+Can use the `exit(2)` syscall rather than the libc call.
+
+There is still the ELF file though with a large amount of overhead. There are a variety of different sections that are produced by the assembler.
+
+TODO: finish notes
+
+## [How programs get run: ELF binaries](https://lwn.net/Articles/631631/)
+
+TODO
+
+## `man 5 elf`
+
+TODO
 
 # I/O
 
@@ -41,7 +97,7 @@ The block layer is the part of the kernel that implements the interface that app
 
 ## [SPDK](https://spdk.io/doc/)
 
-**All userspace*
+**All userspace**
 
 SPDK is a way to bypass the OS and directly access an NVME storage device. It is a "user space, polled-mode, asynchronous, lockless NVME driver"
 
@@ -71,7 +127,7 @@ TODO
 
 Use NVM storage as a block cache for conventional storage devices
 
-## [io-uring]()
+## io-uring
 
 ### [ioctl() for io_uring](https://lwn.net/Articles/844875/)
 
@@ -132,21 +188,7 @@ They are 1:1 implementations. Each thread maps to a kernel scheduling identity. 
 
 c-scape's [implementation](https://github.com/sunfishcode/mustang/tree/main/c-scape/src/threads) of posix threads are built on top of origin's [thread runtime](https://github.com/sunfishcode/mustang/blob/main/origin/src/threads.rs).
 
-One issue with c-scape is that is `libc` compatible so the functions are `extern "C"`. Thus required to switch from Rust to "C" ABI, then back into rust, and then into C-like syscalls. [source](https://github.com/sunfishcode/mustang/issues/123#issue-1283959957)
-
-# Program Startup & ELF
-
-## [A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
-
-libc have a `_start` and an `_exit` routine. These provide portability for starting up and ending a program. You can create your own `_start` with the GCC option `-nostartfiles`. You need to call `_exit` though. You can use the GCC option `-nostdlib` to not link any system libraries or startup files.
-
-Can use the `exit(2)` syscall rather than the libc call.
-
-There is still the ELF file though with a large amount of overhead. There are a variety of different sections that are produced by the assembler. TODO continue notes
-
-## [How programs get run: ELF binaries](https://lwn.net/Articles/631631/)
-
-## `man 5 elf`
+One issue with c-scape is that it is `libc` compatible so the functions are `extern "C"`. Thus required to switch from Rust to "C" ABI, then back into rust, and then into C-like syscalls. [source](https://github.com/sunfishcode/mustang/issues/123#issue-1283959957)
 
 # QEMU
 
