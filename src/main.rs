@@ -1,7 +1,6 @@
 #![feature(lang_items, start)]
 #![no_std]
 #![no_main]
-
 mustang::can_run_this!();
 
 use core::{ffi::c_int, panic::PanicInfo};
