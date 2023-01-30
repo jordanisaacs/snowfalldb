@@ -25,11 +25,11 @@
     ...
   }: let
     system = "x86_64-linux";
+    # target = "x86_64-mustang-linux-gnu";
     overlays = [
       rust-overlay.overlays.default
       (self: super: let
-        # rust = super.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {extensions = ["rust-src" "miri"];});
-        rust = super.rust-bin.stable.latest.default;
+        rust = super.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {extensions = ["rust-src" "miri"];});
       in {
         rustc = rust;
         cargo = rust;
@@ -38,6 +38,13 @@
 
     pkgs = import nixpkgs {
       inherit system overlays;
+      # crossSystem = {
+      #   inherit system;
+      #   rustc = {
+      #     config = target;
+      #     platform = builtins.fromJSON "${mustangTargets}/${target}.json";
+      #   };
+      # };
     };
 
     enableGdb = true;
@@ -92,25 +99,44 @@
       modules = [./configs/editor.nix];
     };
 
-    # snowfalldb = let
-    #   buildRustCrateForPkgs = pkgs:
-    #     pkgs.buildRustCrate.override {
-    #       defaultCrateOverrides =
-    #         pkgs.defaultCrateOverrides
-    #         // {
-    #           exmap = attrs: {
-    #             NIX_CFLAGS_COMPILE = compileFlags;
-    #             buildInputs = [pkgs.rustPlatform.bindgenHook exmapModule.dev];
-    #           };
-    #         };
-    #     };
-    #   generatedBuild = pkgs.callPackage ./Cargo.nix {
-    #     inherit buildRustCrateForPkgs;
-    #   };
-    # in
-    #   generatedBuild
-    #   .rootCrate
-    #   .build;
+    mustangTargets = pkgs.stdenv.mkDerivation {
+      name = "mustang-target-specs";
+      src = pkgs.fetchgit {
+        url = "ssh://git@github.com/jordanisaacs/mustang";
+        rev = "928ea39da900b793690d0c38c8b79d20e7a5b92f";
+        sha256 = "1c8axd4mzficf6h3jg1gid2mjrf52xfphv1zy9sdhs4pqdbc3q73";
+      };
+      installPhase = ''
+        mkdir $out
+        cp mustang/target-specs/* $out
+      '';
+    };
+
+    rustEnv = {
+      RUST_TARGET_PATH = mustangTargets;
+    };
+
+    generatedRustBuild = let
+      buildRustCrateForPkgs = pkgs:
+        pkgs.buildRustCrate.override {
+          defaultCrateOverrides =
+            pkgs.defaultCrateOverrides
+            // {
+              exmap = attrs: {
+                NIX_CFLAGS_COMPILE = compileFlags;
+                buildInputs = [pkgs.rustPlatform.bindgenHook exmapModule.dev];
+              };
+            };
+        };
+    in
+      pkgs.callPackage ./Cargo.nix {
+        inherit buildRustCrateForPkgs;
+      };
+
+    snowfalldb =
+      generatedRustBuild
+      .rootCrate
+      .build;
 
     nativeBuildInputs = with pkgs; [
       rustc
@@ -136,16 +162,17 @@
   in
     with pkgs; {
       packages.${system} = {
-        # inherit exmapExample exmapModule;
+        # inherit snowfalldb;
       };
 
-      devShells.${system}.default = mkShell {
-        NIX_CFLAGS_COMPILE = compileFlags;
-        KERNEL = kernel.dev;
-        KERNEL_VERSION = kernel.modDirVersion;
-        nativeBuildInputs =
-          nativeBuildInputs
-          ++ [neovim.neovim];
-      };
+      devShells.${system}.default = mkShell ({
+          NIX_CFLAGS_COMPILE = compileFlags;
+          KERNEL = kernel.dev;
+          KERNEL_VERSION = kernel.modDirVersion;
+          nativeBuildInputs =
+            nativeBuildInputs
+            ++ [neovim.neovim];
+        }
+        // rustEnv);
     };
 }
