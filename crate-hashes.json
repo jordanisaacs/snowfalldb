@@ -1,0 +1,5 @@
+{
+  "dlmalloc 0.2.4 (git+ssh://git@github.com/jordanisaacs/dlmalloc-rs.git#33d51d87cce5e6c904d5c0e438c1d8b29b1d2001)": "19ca056nwx7yl9wbwlbfs6n4gw9aii5vcivm0a1bh3lyihq0z0p1",
+  "mustang 0.6.1 (git+ssh://git@github.com/jordanisaacs/mustang#928ea39da900b793690d0c38c8b79d20e7a5b92f)": "1c8axd4mzficf6h3jg1gid2mjrf52xfphv1zy9sdhs4pqdbc3q73",
+  "origin 0.6.1 (git+ssh://git@github.com/jordanisaacs/mustang#928ea39da900b793690d0c38c8b79d20e7a5b92f)": "1c8axd4mzficf6h3jg1gid2mjrf52xfphv1zy9sdhs4pqdbc3q73"
+}
