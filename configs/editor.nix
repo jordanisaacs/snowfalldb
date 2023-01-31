@@ -9,7 +9,15 @@
       formatOnSave = true;
       rust = {
         enable = true;
-        rustAnalyzerOpts = "";
+        rustAnalyzerOpts = ''
+          ["rust-analyzer"] = {
+            check = {
+              targets = "x86_64-mustang-linux-gnu",
+              extraArgs = { "-Zbuild-std=core,alloc" },
+              allTargets = false,
+            },
+          },
+        '';
       };
       clang.enable = true;
       nix.enable = true;

@@ -156,6 +156,7 @@
 
       runQemu
       runGdb
+      gdb
     ];
 
     compileFlags = "-I${kernel.dev}/lib/modules/${kernel.modDirVersion}/source/include";

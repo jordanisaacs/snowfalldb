@@ -6,4 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-mustang = { git = "ssh://git@github.com/jordanisaacs/mustang", branch = "nostd", default-features = false, features = ["default-nostd"]}
+mustang = { git = "ssh://git@github.com/jordanisaacs/mustang", branch = "nostd", default-features = false, features = ["threads", "default-alloc"] }
+sc = "0.2.7"
+sjlj = "0.1.2"
+linux-raw-sys = { version = "0.2.1", default-features = false, features = ["no_std", "general"]}
+rustix = { version = "0.36.7", default-features = false, features = ["fs"]}
