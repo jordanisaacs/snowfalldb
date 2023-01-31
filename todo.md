@@ -16,3 +16,7 @@ How do I pass `--target` to `buildRustCrate` (and what about `-Zbuild-std`)
     * Only need to pull out the pthreads implementation
 * `unwinding`
     * Implement rustix backend
+
+## File issue for proc macro std
+
+Pulling in a proc macro overrides the `eh_personality` and  `panic_handler` that I set.
