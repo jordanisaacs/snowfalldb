@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "atomic"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b88d82667eca772c4aa12f0f1348b3ae643424c8876448f3f7bd5787032e234c"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,8 +170,7 @@ dependencies = [
 [[package]]
 name = "naked-function"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "299bb5a266f04916e8e6153ac48898817ba6cd18c96a94bd86e7290e1ad1eb9d"
+source = "git+ssh://git@github.com/jordanisaacs/naked-function#2756a7c5e5e47c557d2223bcd604a517be2a3018"
 dependencies = [
  "cfg-if",
  "naked-function-macro",
@@ -171,8 +179,7 @@ dependencies = [
 [[package]]
 name = "naked-function-macro"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "622c118d024d9408f6e34567c89e9d652679c3ecfb7b94b060ac016c898ee58d"
+source = "git+ssh://git@github.com/jordanisaacs/naked-function#2756a7c5e5e47c557d2223bcd604a517be2a3018"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -274,8 +281,7 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 [[package]]
 name = "sjlj"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c3d622fb4b40fe1c53e6c54db72c5908ffd8111d9d92638200974b85ff6cf57"
+source = "git+ssh://git@github.com/jordanisaacs/sjlj?branch=nostd#8f8e844ad1e2dcf56114553424cd319980fb302d"
 dependencies = [
  "linux-raw-sys 0.2.1",
  "naked-function",
@@ -286,6 +292,7 @@ dependencies = [
 name = "snowfalldb"
 version = "0.1.0"
 dependencies = [
+ "atomic",
  "linux-raw-sys 0.2.1",
  "mustang",
  "rustix",

@@ -13,7 +13,7 @@
           ["rust-analyzer"] = {
             check = {
               targets = "x86_64-mustang-linux-gnu",
-              extraArgs = { "-Zbuild-std=core,alloc" },
+              extraArgs = { "-Zbuild-std=core,alloc,test,std" },
               allTargets = false,
             },
           },

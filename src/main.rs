@@ -1,16 +1,19 @@
 #![feature(lang_items, start)]
 #![no_std]
-#![no_main]
-
-use core::{ffi::c_void, fmt::Write, hint::unreachable_unchecked};
+#![cfg_attr(not(test), no_main)]
 
 use alloc::string::String;
-// use exmap::OwnedExmapFd;
+use core::{
+    ffi::{c_int, c_void},
+    fmt::Write,
+    hint::unreachable_unchecked,
+    panic::PanicInfo,
+};
 use linux_raw_sys::{
     ctypes::{c_long, c_uint},
     general::{
-        __NR_rt_sigaction, __NR_rt_sigreturn, __kernel_sighandler_t, __sigrestore_t, siginfo_t,
-        sigset_t, SA_RESTORER, SA_SIGINFO, SIGSEGV,
+        __NR_rt_sigaction, __kernel_sighandler_t, __sigrestore_t, siginfo_t, sigset_t, SA_RESTORER,
+        SA_SIGINFO, SIGSEGV,
     },
 };
 use rustix::{io::stdout, process::kill_process_group};
@@ -20,17 +23,23 @@ extern crate alloc;
 
 mustang::can_run_this!();
 
-use core::{ffi::c_int, panic::PanicInfo};
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(_panic: &PanicInfo<'_>) -> ! {
+    loop {}
+}
 
-// #[panic_handler]
-// fn panic(_panic: &PanicInfo<'_>) -> ! {
-//     loop {}
-// }
-//
-// #[lang = "eh_personality"]
-// extern "C" fn eh_personality() {}
+#[cfg(not(test))]
+#[lang = "eh_personality"]
+extern "C" fn eh_personality() {}
 
-#[no_mangle]
+// Small hack for rust-analyzer. When testing, we do not want to use this main function. But if
+// we do `#[cfg(not(test))]` then rust-analyzer will say the function is not being used. Hack around
+// this by instead mangling `main` during test. Mangling combined with disabling `#![no_main]` will
+// prevent the error of two mains being defined. This is better than disabling the `test` feature
+// for the crate because then we lose rust-analyzer in test functions. Lets have cake and eat
+// it too.
+#[cfg_attr(not(test), no_mangle)]
 extern "C" fn main(_argc: c_int, _argv: *mut *mut u8, _envp: *mut *mut u8) -> c_int {
     register_signal_handler();
     let threads = 4;
@@ -38,30 +47,26 @@ extern "C" fn main(_argc: c_int, _argv: *mut *mut u8, _envp: *mut *mut u8) -> c_
     let mut b = String::new();
     let fd = unsafe { stdout() };
     let ret = unsafe { sigsetjmp(&mut JMP_BUF, true) };
+    b.clear();
     if ret == 0 {
         write!(&mut b, "Accessing: {}\n", addr).unwrap();
         rustix::io::write(fd, b.as_bytes()).unwrap();
-        let x = unsafe { *(addr as *const usize) };
+        let _ = unsafe { *(addr as *const usize) };
     }
     write!(&mut b, "Jumped: {}\n", ret).unwrap();
     rustix::io::write(fd, b.as_bytes()).unwrap();
-    0 as c_int
+    0
 }
 
 static mut JMP_BUF: SigJumpBuf = SigJumpBuf::new();
-//
-// #[derive(Debug)]
-// pub enum PageStatus {
-//     Unlocked,
-//     LockedShared(u8),
-//     Locked,
-//     Marked,
-//     Evicted,
-// }
-//
-extern "C" fn sigrestore() -> () {
-    let r = unsafe { sc::syscall0(__NR_rt_sigreturn as usize) };
-    debug_assert!(r == 0);
+
+#[derive(Debug)]
+pub enum PageStatus {
+    Unlocked,
+    LockedShared(u8),
+    Locked,
+    Marked,
+    Evicted,
 }
 
 pub union SigHandler {
@@ -95,9 +100,9 @@ extern "C" fn sigsegv_handler(_sig: c_uint, info: *mut siginfo_t, _ucontext: *mu
 
     let fd = unsafe { stdout() };
     let mut b = String::new();
-    write!(&mut b, "{}\n", page).unwrap();
-
+    write!(&mut b, "Page Address: {}\n", page).unwrap();
     rustix::io::write(fd, b.as_bytes()).unwrap();
+    drop(b);
     unsafe { siglongjmp(&JMP_BUF, 5) }
 }
 
@@ -107,7 +112,7 @@ fn register_signal_handler() {
         x.h.sa_sigaction = Some(sigsegv_handler);
         x.sa_mask = 0;
         x.sa_flags = (SA_RESTORER | SA_SIGINFO).into();
-        x.sa_restorer = Some(sigrestore);
+        x.sa_restorer = None;
         let r = sc::syscall4(
             __NR_rt_sigaction as usize,
             SIGSEGV as usize,
