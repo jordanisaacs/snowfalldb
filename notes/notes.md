@@ -80,6 +80,16 @@ TODO
 
 TODO
 
+## [Linux x86 Program Start Up - or - How the heck do we get to main()](http://www.dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
+
+TODO
+
+## [`.init, .ctors, and .init_array`](https://maskray.me/blog/2021-11-07-init-ctors-init-array)
+
+Dynamic initializations for non-local variables before the main function. Calls functions in `init_array`. GCC reserves the first 100. Catch violations with `-Wprio-ctor-dtor`.
+
+See [System V ABI](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf) for the generic ABI quote source
+
 ## Rust
 
 ### [Origin](https://github.com/sunfishcode/mustang/tree/main/origin)
@@ -89,6 +99,10 @@ TODO
 Use `#[start]` (tracking [issue](https://github.com/rust-lang/rust/issues/29633)) or override the C `main` function. [Source](https://doc.rust-lang.org/beta/unstable-book/language-features/lang-items.html#writing-an-executable-without-stdlib)
 
 Rust stdlib uses the start function to initialize its [runtime](https://sourcegraph.com/github.com/rust-lang/rust/-/blob/library/std/src/rt.rs?L99%3A39=). A key thing to note is it uses a `panic::catch_unwind`. Panicking from a main function is undefined behavior right now (more notes in tracking issue). Inside it also calls the platform specific init. [unix init](https://sourcegraph.com/github.com/rust-lang/rust/-/blob/library/std/src/sys/unix/mod.rs?L53=).
+
+### init_array and args
+
+On unix stdlib uses init_array to initialize args because glibc passes argc, argv, and envp to function in the `.init_array`. See [source](https://github.com/rust-lang/rust/blob/6c991b07403a3234dd1ec0ac973b8ef97055e605/library/std/src/sys/unix/args.rs#L109)
 
 # I/O
 
@@ -477,6 +491,16 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 [Internals](https://www.interdb.jp/pg/)
 
 # SnowfallDB Design
+
+## Logging
+
+Using the [log](https://docs.rs/log/latest/log/) crate for lightweight logging. It is being used in no standard form and need to implement our own logger. TODO
+
+Hook a logger up in the `.init_array` section. Not using origin's because it uses `env_logger` which uses stdlib.
+
+## Threads
+
+Currently using origin's [thread runtime](https://github.com/sunfishcode/mustang/blob/main/origin/src/threads.rs) with c-scape's [pthread](https://github.com/sunfishcode/mustang/blob/main/origin/src/threads.rs) implemented on top.
 
 ## Page Cache/Buffer Management
 
