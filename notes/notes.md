@@ -143,6 +143,12 @@ Provides a cross-platform user-space library that is I/O interface independent. 
 
 Designed to be rapidly iterable to include new NVMe features.
 
+## NVMe
+
+### [Character and Block Device](https://serverfault.com/questions/892134/why-is-there-both-character-device-and-block-device-for-nvme)
+
+The character device `/dev/nvme0` is the NVMe controller. While the block devices eg `/dev/nvme0n1` are storage namespaces. They behave essentially as disks. Erasing the SSD does not erase the namespaces.
+
 ## [Enabling Asynchronous I/O Passthru in NVMe-Native Applications](https://www.snia.org/educational-library/enabling-asynchronous-i-o-passthru-nvme-native-applications-2021)
 
 TODO
