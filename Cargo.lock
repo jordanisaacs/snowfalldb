@@ -26,7 +26,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "c-gull"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#c4218777ddbc033da2cd63dcff1d215e97cc8d02"
+source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
 dependencies = [
  "c-scape",
  "libc",
@@ -35,14 +35,14 @@ dependencies = [
 [[package]]
 name = "c-scape"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#c4218777ddbc033da2cd63dcff1d215e97cc8d02"
+source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
 dependencies = [
  "errno",
  "libc",
  "libm",
  "log",
- "memoffset",
- "origin",
+ "memoffset 0.8.0",
+ "origin 0.6.1 (git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd)",
  "rand",
  "rand_core",
  "rand_pcg",
@@ -118,6 +118,12 @@ checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
 
 [[package]]
 name = "linux-raw-sys"
+version = "0.0.46"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4d2456c373231a208ad294c33dc5bff30051eafd954cd4caae83a712b12854d"
+
+[[package]]
+name = "linux-raw-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
@@ -149,6 +155,15 @@ dependencies = [
 
 [[package]]
 name = "memoffset"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
+name = "memoffset"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
@@ -159,11 +174,11 @@ dependencies = [
 [[package]]
 name = "mustang"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#c4218777ddbc033da2cd63dcff1d215e97cc8d02"
+source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
 dependencies = [
  "c-gull",
  "dlmalloc",
- "origin",
+ "origin 0.6.1 (git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd)",
  "unwinding",
 ]
 
@@ -189,13 +204,28 @@ dependencies = [
 [[package]]
 name = "origin"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#c4218777ddbc033da2cd63dcff1d215e97cc8d02"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02101e8dc3aecf2db697e369544527e27edb05d7e6bcc8c25d9c616e7fd4eb25"
+dependencies = [
+ "bitflags",
+ "libc",
+ "linux-raw-sys 0.0.46",
+ "lock_api",
+ "memoffset 0.6.5",
+ "rustix",
+]
+
+[[package]]
+name = "origin"
+version = "0.6.1"
+source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
 dependencies = [
  "bitflags",
  "libc",
  "linux-raw-sys 0.1.4",
  "lock_api",
- "memoffset",
+ "log",
+ "memoffset 0.8.0",
  "rustix",
 ]
 
@@ -294,7 +324,9 @@ version = "0.1.0"
 dependencies = [
  "atomic",
  "linux-raw-sys 0.2.1",
+ "log",
  "mustang",
+ "origin 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustix",
  "sc",
  "sjlj",

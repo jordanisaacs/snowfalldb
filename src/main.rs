@@ -6,7 +6,6 @@ use alloc::string::String;
 use core::{
     ffi::{c_int, c_void},
     fmt::Write,
-    hint::unreachable_unchecked,
     panic::PanicInfo,
 };
 use linux_raw_sys::{
@@ -16,10 +15,11 @@ use linux_raw_sys::{
         SA_SIGINFO, SIGSEGV,
     },
 };
-use rustix::{io::stdout, process::kill_process_group};
+use rustix::io::stdout;
 use sjlj::{siglongjmp, sigsetjmp, SigJumpBuf};
 
 extern crate alloc;
+extern crate origin;
 
 mustang::can_run_this!();
 
@@ -33,12 +33,22 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
 
-// Small hack for rust-analyzer. When testing, we do not want to use this main function. But if
-// we do `#[cfg(not(test))]` then rust-analyzer will say the function is not being used. Hack around
-// this by instead mangling `main` during test. Mangling combined with disabling `#![no_main]` will
-// prevent the error of two mains being defined. This is better than disabling the `test` feature
-// for the crate because then we lose rust-analyzer in test functions. Lets have cake and eat
-// it too.
+// Cannot use origin's `env_logger` because it requires std. Thus just copied the function but
+// instead initializes up our own logger
+#[link_section = ".init_array.00000"]
+#[cfg(feature = "log")]
+#[used]
+static INIT_ARRAY: unsafe extern "C" fn() = {
+    unsafe extern "C" fn function() {
+        // TODO: initialize our own custom logger
+
+        log::trace!(target: "origin::program", "Program started");
+
+        log::trace!(target: "origin::threads", "Main Thread[{:?}] initialized", origin::current_thread_id());
+    }
+    function
+};
+
 #[cfg_attr(not(test), no_mangle)]
 extern "C" fn main(_argc: c_int, _argv: *mut *mut u8, _envp: *mut *mut u8) -> c_int {
     register_signal_handler();
@@ -51,9 +61,10 @@ extern "C" fn main(_argc: c_int, _argv: *mut *mut u8, _envp: *mut *mut u8) -> c_
     if ret == 0 {
         write!(&mut b, "Accessing: {}\n", addr).unwrap();
         rustix::io::write(fd, b.as_bytes()).unwrap();
-        let _ = unsafe { *(addr as *const usize) };
+        let x = unsafe { *(addr as *const usize) };
+        unreachable!("Should segfault {}", x);
     }
-    write!(&mut b, "Jumped: {}\n", ret).unwrap();
+    write!(&mut b, "Return Jumped: {}\n", ret).unwrap();
     rustix::io::write(fd, b.as_bytes()).unwrap();
     0
 }
@@ -82,11 +93,11 @@ pub struct Sigaction {
     pub sa_mask: sigset_t,
 }
 
-unsafe fn abort() -> () {
-    let tid = mustang::origin::current_thread_id();
-    assert!(kill_process_group(tid, rustix::process::Signal::Abort).is_ok());
-    unreachable_unchecked();
-}
+// unsafe fn abort() -> () {
+//     let tid = mustang::origin::current_thread_id();
+//     assert!(kill_process_group(tid, rustix::process::Signal::Abort).is_ok());
+//     unreachable_unchecked();
+// }
 
 extern "C" fn sigsegv_handler(_sig: c_uint, info: *mut siginfo_t, _ucontext: *mut c_void) {
     let page = unsafe {
@@ -100,7 +111,7 @@ extern "C" fn sigsegv_handler(_sig: c_uint, info: *mut siginfo_t, _ucontext: *mu
 
     let fd = unsafe { stdout() };
     let mut b = String::new();
-    write!(&mut b, "Page Address: {}\n", page).unwrap();
+    write!(&mut b, "Fault Address: {}\n", page).unwrap();
     rustix::io::write(fd, b.as_bytes()).unwrap();
     drop(b);
     unsafe { siglongjmp(&JMP_BUF, 5) }
