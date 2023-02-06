@@ -26,7 +26,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "c-gull"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
+source = "git+ssh://git@github.com/sunfishcode/mustang#1740db4aeef18b430dc3d64acc660388340da172"
 dependencies = [
  "c-scape",
  "libc",
@@ -35,14 +35,14 @@ dependencies = [
 [[package]]
 name = "c-scape"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
+source = "git+ssh://git@github.com/sunfishcode/mustang#1740db4aeef18b430dc3d64acc660388340da172"
 dependencies = [
  "errno",
  "libc",
  "libm",
  "log",
- "memoffset 0.8.0",
- "origin 0.6.1 (git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd)",
+ "memoffset",
+ "origin",
  "rand",
  "rand_core",
  "rand_pcg",
@@ -118,12 +118,6 @@ checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.0.46"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d2456c373231a208ad294c33dc5bff30051eafd954cd4caae83a712b12854d"
-
-[[package]]
-name = "linux-raw-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
@@ -155,15 +149,6 @@ dependencies = [
 
 [[package]]
 name = "memoffset"
-version = "0.6.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
-dependencies = [
- "autocfg",
-]
-
-[[package]]
-name = "memoffset"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d61c719bcfbcf5d62b3a09efa6088de8c54bc0bfcd3ea7ae39fcc186108b8de1"
@@ -174,18 +159,19 @@ dependencies = [
 [[package]]
 name = "mustang"
 version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
+source = "git+ssh://git@github.com/sunfishcode/mustang#1740db4aeef18b430dc3d64acc660388340da172"
 dependencies = [
  "c-gull",
  "dlmalloc",
- "origin 0.6.1 (git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd)",
+ "origin",
  "unwinding",
 ]
 
 [[package]]
 name = "naked-function"
-version = "0.1.1"
-source = "git+ssh://git@github.com/jordanisaacs/naked-function#2756a7c5e5e47c557d2223bcd604a517be2a3018"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b55ed0c875d6123dd0abd01d52cb3dc50d21b3214acb2d4dfe81a6f4ee244a6d"
 dependencies = [
  "cfg-if",
  "naked-function-macro",
@@ -193,8 +179,9 @@ dependencies = [
 
 [[package]]
 name = "naked-function-macro"
-version = "0.1.1"
-source = "git+ssh://git@github.com/jordanisaacs/naked-function#2756a7c5e5e47c557d2223bcd604a517be2a3018"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee6137136c12021b3bb25753d8889eb4a62c3412093eafd92066f5f6d00e83ee"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -204,28 +191,14 @@ dependencies = [
 [[package]]
 name = "origin"
 version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02101e8dc3aecf2db697e369544527e27edb05d7e6bcc8c25d9c616e7fd4eb25"
-dependencies = [
- "bitflags",
- "libc",
- "linux-raw-sys 0.0.46",
- "lock_api",
- "memoffset 0.6.5",
- "rustix",
-]
-
-[[package]]
-name = "origin"
-version = "0.6.1"
-source = "git+ssh://git@github.com/jordanisaacs/mustang?branch=nostd#2ade5efe903b6fdf346e2ab5065cace5603c6cea"
+source = "git+ssh://git@github.com/sunfishcode/mustang#1740db4aeef18b430dc3d64acc660388340da172"
 dependencies = [
  "bitflags",
  "libc",
  "linux-raw-sys 0.1.4",
  "lock_api",
  "log",
- "memoffset 0.8.0",
+ "memoffset",
  "rustix",
 ]
 
@@ -310,8 +283,9 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "sjlj"
-version = "0.1.2"
-source = "git+ssh://git@github.com/jordanisaacs/sjlj?branch=nostd#8f8e844ad1e2dcf56114553424cd319980fb302d"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e9b43efc387069aabdc27124a294337c7032a3cb62df0108d2578eff7f08e39"
 dependencies = [
  "linux-raw-sys 0.2.1",
  "naked-function",
@@ -326,7 +300,7 @@ dependencies = [
  "linux-raw-sys 0.2.1",
  "log",
  "mustang",
- "origin 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "origin",
  "rustix",
  "sc",
  "sjlj",
