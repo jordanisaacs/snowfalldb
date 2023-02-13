@@ -496,6 +496,68 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 
 [Internals](https://www.interdb.jp/pg/)
 
+# Rust Cargo Builds
+
+## [Resolver 2](https://doc.rust-lang.org/cargo/reference/resolver.html#feature-resolver-version-2)
+
+Defaults to version 2 when edition is 2021. Features enabled on build-dependencies or proc-macros are not unified when same dependencies are used as a normal dependency. Eg proc-macros won't pull in std for your no_std build.
+
+# Nix Builds
+
+## [Status of lang2nix approaches](https://discourse.nixos.org/t/status-of-lang2nix-approaches/14477?u=snowytrees)
+
+## [rust2nix Comparisons](https://discourse.nixos.org/t/cargo2nix-dramatically-simpler-rust-inside-nix/9334/2?u=snowytrees)
+
+`buildRustCrate` + `crate2nix` is most Nix-native approach. Each crate and its dependent is a separate Nix derivation + output path. Crates only re-compiled when necessary. Output paths can be shared between different rust projects.
+
+## sysroot
+
+Using a sysroot to cross compile `core` and `std`. rustc can cross compile so do not need to build rust itself for the target platform. The sysroot is just a crate that depends directly on core, std, and compiler_builtins (using paths). This lets us generate a Cargo.lock which in turn can generate a Cargo.nix. Now our "core" and "std" dependencies are not using the prebuilt ones, but instead our custom cross compiled version.
+
+## [Cross Compilation - nix.dev](https://nix.dev/tutorials/cross-compilation)
+
+Build platform: Where executable is built
+
+Host Platform: where compiled executable runs
+
+Target platform (is relevant for compilers): build compiler on *build platform*, run it on *host platform*, run final executable on *target platform*
+
+There are a set of predefined host platforms in `pkgsCross` - retrieve platform string with `pkgsCross.<platform>.stdenv.hostPlatform.config`
+
+## [Cross Compilation - nix manual](https://nixos.org/manual/nixpkgs/stable/#chap-cross)
+
+## stdenv/top-level/systems
+
+[pkgs/stdenv/default.nix](https://github.com/NixOS/nixpkgs/blob/refs%2Fheads%2Fnixpkgs-unstable/pkgs/stdenv/default.nix)
+* Returns the correct bootstrapping function list based on the system (eg `cross`, `linux`, etc)
+* Functions are defined in their respect stdenv folder
+
+[Cross System function list](https://github.com/NixOS/nixpkgs/blob/refs%2Fheads%2Fnixpkgs-unstable/pkgs/stdenv/cross/default.nix)
+* First function builds the local system. Uses the bootstrapping functions of the local system except for the last one (constructing the final stdenv).
+* That last function which constructs the final stdenv is constructed with `allowCustomOverrides` to change the built-time dependencies
+* Then tool packages are built, overrides local packages by setting `targetPlatform = crossSystem`
+* Then the runtime packages are overriden. Setting the `hostPlatform` and `targetPlatform` to the `crossSystem`
+
+[pkgs/stdenv/adapters.nix](https://sourcegraph.com/github.com/NixOS/nixpkgs@refs/heads/nixpkgs-unstable/-/blob/pkgs/stdenv/adapters.nix)
+* Provides a variety of helper functions for taking a stdenv & returning a new stdenv with different behavior
+
+[pkgs/stdenv/booter.nix]()
+* Called from the `top-level/default.nix`
+* Returns a single function that calls the list of stage functions returned by `stdenv/default.nix`
+
+[pkgs/top-level/default.nix](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/pkgs/top-level/default.nix)
+* [First](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/pkgs/top-level/default.nix#L61) elaborates `localSystem` and `crossSystem` into full systems ([elaborate function](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/lib/systems/default.nix#L25))
+* [Second](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/pkgs/top-level/default.nix#L72) loads in the nixpkgs config (can be either function or just attrset) and evaluates it (see [module definition](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/pkgs/top-level/config.nix) both config and config function)
+* [First](https://github.com/NixOS/nixpkgs/blob/refs%2Fheads%2Fnixpkgs-unstable/pkgs/top-level/default.nix#L123) retrieves the boot function by just importing `booter.nix`
+* [Second](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/pkgs/top-level/default.nix#L125) retrieves the stages by just calling `stdenv/default.nix`
+
+## [crate2nix Cross Compilation]
+
+rustc can cross compile already, so do not need to bootstrap it for the target platform, just need it for the host platform. Thus can generally just use the existing toolchain we have (either through nixpkgs or an overlay, eg. oxalica's rust-overlay)
+
+Once you have a toolchain, need to make a sysroot. This is to force a compilation of `core`, `std`, etc. See 
+
+
 # SnowfallDB Design
 
 ## Logging
