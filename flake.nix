@@ -4,6 +4,7 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     neovim-flake.url = "github:jordanisaacs/neovim-flake";
     crate2nix = {
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:kolloch/crate2nix";
       flake = false;
     };
@@ -24,27 +25,64 @@
     exmap,
     ...
   }: let
-    system = "x86_64-linux";
-    # target = "x86_64-mustang-linux-gnu";
+    localSystem = "x86_64-linux";
+    target = "x86_64-mustang-linux-gnu";
+    pkgsFunc = import nixpkgs;
+
     overlays = [
       rust-overlay.overlays.default
       (self: super: let
-        rust = super.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {extensions = ["rust-src" "miri"];});
+        nightlyRust = let
+          r = self.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default);
+          rustc = r;
+          cargo = r;
+          # Need the rust library source
+          # the workspace crates do not put their lib.rs in a source directory.
+          # Therefore, buildRustCrate won't build anything because it checks for [src/lib.rs](https://github.com/NixOS/nixpkgs/blob/583e2bc9615cdb03daafb6b49017c0609cb97ede/pkgs/build-support/rust/build-rust-crate/build-crate.nix#L65)
+          # BASE=$out/rustc-std-workspace
+          # for BASE_PATH in $BASE-core $BASE-alloc $BASE-std
+          # do
+          #   chmod +w $BASE_PATH
+          #   mkdir -p $BASE_PATH/src
+          #   mv $BASE_PATH/lib.rs $BASE_PATH/src
+          #   chmod -w $BASE_PATH
+          # done
+          rustLibSrc = self.runCommand "rust-lib-src" {} ''
+            mkdir $out
+            cp -r ${self.rust-bin.nightly.latest.rust-src}/lib/rustlib/src/rust/library/* $out
+          '';
+
+          sysrootCargo = import ./nix/sysroot/cargo-sysroot.nix {
+            pkgs = self;
+            rustLibSrc = rustLibSrc;
+          };
+        in {
+          inherit rustc cargo rustLibSrc sysrootCargo;
+        };
       in {
-        rustc = rust;
-        cargo = rust;
+        inherit nightlyRust;
       })
     ];
 
-    pkgs = import nixpkgs {
-      inherit system overlays;
-      # crossSystem = {
-      #   inherit system;
-      #   rustc = {
-      #     config = target;
-      #     platform = builtins.fromJSON "${mustangTargets}/${target}.json";
-      #   };
-      # };
+    pkgs = pkgsFunc {
+      config = {};
+      inherit localSystem overlays;
+    };
+
+    mustangPkgs = pkgsFunc {
+      inherit localSystem overlays;
+      crossSystem = {
+        system = localSystem;
+        rustc = {
+          config = target;
+          platform = builtins.fromJSON (builtins.readFile "${mustangTargets}/${target}.json");
+        };
+      };
+    };
+
+    mustangNix = import ./nix {
+      inherit pkgs mustangPkgs;
+      inherit (pkgs.nightlyRust) rustc cargo rustLibSrc;
     };
 
     enableGdb = true;
@@ -119,17 +157,16 @@
     generatedRustBuild = let
       buildRustCrateForPkgs = pkgs:
         pkgs.buildRustCrate.override {
-          defaultCrateOverrides =
-            pkgs.defaultCrateOverrides
-            // {
-              exmap = attrs: {
-                NIX_CFLAGS_COMPILE = compileFlags;
-                buildInputs = [pkgs.rustPlatform.bindgenHook exmapModule.dev];
-              };
-            };
+          inherit (pkgs.buildPackages.buildPackages) rust rustc cargo;
         };
+      # // {
+      #   exmap = attrs: {
+      #     NIX_CFLAGS_COMPILE = compileFlags;
+      #     buildInputs = [pkgs.rustPlatform.bindgenHook exmapModule.dev];
+      #   };
+      # };
     in
-      pkgs.callPackage ./Cargo.nix {
+      mustangPkgs.callPackage ./Cargo.nix {
         inherit buildRustCrateForPkgs;
       };
 
@@ -139,7 +176,7 @@
       .build;
 
     nativeBuildInputs = with pkgs; [
-      rustc
+      nightlyRust.rustc
       rust-bindgen
       rustPlatform.bindgenHook
 
@@ -160,20 +197,20 @@
     ];
 
     compileFlags = "-I${kernel.dev}/lib/modules/${kernel.modDirVersion}/source/include";
-  in
-    with pkgs; {
-      packages.${system} = {
-        # inherit snowfalldb;
-      };
-
-      devShells.${system}.default = mkShell ({
-          NIX_CFLAGS_COMPILE = compileFlags;
-          KERNEL = kernel.dev;
-          KERNEL_VERSION = kernel.modDirVersion;
-          nativeBuildInputs =
-            nativeBuildInputs
-            ++ [neovim.neovim];
-        }
-        // rustEnv);
+  in {
+    packages.${localSystem} = {
+      inherit snowfalldb mustangNix;
+      nightlyRust = pkgs.nightlyRust;
     };
+
+    devShells.${localSystem}.default = pkgs.mkShell ({
+        NIX_CFLAGS_COMPILE = compileFlags;
+        KERNEL = kernel.dev;
+        KERNEL_VERSION = kernel.modDirVersion;
+        nativeBuildInputs =
+          nativeBuildInputs
+          ++ [neovim.neovim];
+      }
+      // rustEnv);
+  };
 }
