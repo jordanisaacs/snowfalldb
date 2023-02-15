@@ -1,11 +1,11 @@
 {
   inputs = {
-    nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:jordanisaacs/nixpkgs/build-rust-cc";
     rust-overlay.url = "github:oxalica/rust-overlay";
     neovim-flake.url = "github:jordanisaacs/neovim-flake";
     crate2nix = {
       inputs.nixpkgs.follows = "nixpkgs";
-      url = "github:kolloch/crate2nix";
+      url = "github:jordanisaacs/crate2nix/vendor";
       flake = false;
     };
     kernelFlake = {
@@ -33,7 +33,7 @@
       rust-overlay.overlays.default
       (self: super: let
         nightlyRust = let
-          r = self.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default);
+          r = self.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {extensions = ["rust-src"];});
           rustc = r;
           cargo = r;
           # Need the rust library source
@@ -84,6 +84,44 @@
       inherit pkgs mustangPkgs;
       inherit (pkgs.nightlyRust) rustc cargo rustLibSrc;
     };
+
+    makeApp = {
+      rootFeatures ? ["default"],
+      release ? true,
+    }:
+      pkgs.callPackage ./Cargo.nix {
+        stdenv = mustangPkgs.stdenv;
+        inherit rootFeatures release;
+        buildRustCrateForPkgs = mustangNix.combineWrappers [
+          (pkgs:
+            (mustangNix.buildRustCrateForMustang {
+              inherit (pkgs.nightlyRust) rustc cargo;
+              inherit (pkgs) buildRustCrate;
+            })
+            .override {
+              defaultCrateOverrides = pkgs.defaultCrateOverrides;
+            })
+        ];
+      };
+
+    generatedRustBuild = makeApp {};
+
+    snowfalldb =
+      generatedRustBuild
+      .rootCrate
+      .build
+      .override {
+        extraDepsIsBuild = isBuildDep: (
+          if isBuildDep
+          then []
+          else
+            (map (d: d // {stdlib = true;}) [
+              mustangNix.mustangCore
+              mustangNix.mustangCompilerBuiltins
+              mustangNix.mustangAlloc
+            ])
+        );
+      };
 
     enableGdb = true;
 
@@ -154,34 +192,13 @@
       RUST_TARGET_PATH = mustangTargets;
     };
 
-    generatedRustBuild = let
-      buildRustCrateForPkgs = pkgs:
-        pkgs.buildRustCrate.override {
-          inherit (pkgs.buildPackages.buildPackages) rust rustc cargo;
-        };
-      # // {
-      #   exmap = attrs: {
-      #     NIX_CFLAGS_COMPILE = compileFlags;
-      #     buildInputs = [pkgs.rustPlatform.bindgenHook exmapModule.dev];
-      #   };
-      # };
-    in
-      mustangPkgs.callPackage ./Cargo.nix {
-        inherit buildRustCrateForPkgs;
-      };
-
-    snowfalldb =
-      generatedRustBuild
-      .rootCrate
-      .build;
-
     nativeBuildInputs = with pkgs; [
       nightlyRust.rustc
       rust-bindgen
       rustPlatform.bindgenHook
 
-      pkgs.crate2nix
-      exmapModule
+      (import crate2nix {inherit pkgs;})
+      # exmapModule
 
       cargo
       cargo-edit
@@ -191,8 +208,8 @@
 
       bear
 
-      runQemu
-      runGdb
+      # runQemu
+      # runGdb
       gdb
     ];
 
@@ -204,9 +221,9 @@
     };
 
     devShells.${localSystem}.default = pkgs.mkShell ({
-        NIX_CFLAGS_COMPILE = compileFlags;
-        KERNEL = kernel.dev;
-        KERNEL_VERSION = kernel.modDirVersion;
+        # NIX_CFLAGS_COMPILE = compileFlags;
+        # KERNEL = kernel.dev;
+        # KERNEL_VERSION = kernel.modDirVersion;
         nativeBuildInputs =
           nativeBuildInputs
           ++ [neovim.neovim];

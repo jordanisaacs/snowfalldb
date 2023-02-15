@@ -2,7 +2,7 @@
   linuxKernel,
   lib,
 }: let
-  version = "6.1.8";
+  version = "6.1.11";
   localVersion = "-development";
   src = linuxKernel.packages.linux_6_1.kernel.src;
 in {
