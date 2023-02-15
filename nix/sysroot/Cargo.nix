@@ -251,6 +251,39 @@ rec {
         };
         resolvedDefaultFeatures = [ "compiler_builtins" "core" "rustc-dep-of-std" ];
       };
+      "getopts" = rec {
+        crateName = "getopts";
+        version = "0.2.21";
+        edition = "2015";
+        sha256 = "1mgb3qvivi26gs6ihqqhh8iyhp3vgxri6vwyrwg28w0xqzavznql";
+        authors = [
+          "The Rust Project Developers"
+        ];
+        dependencies = [
+          {
+            name = "rustc-std-workspace-core";
+            packageId = "rustc-std-workspace-core";
+            rename = "core";
+            optional = true;
+          }
+          {
+            name = "rustc-std-workspace-std";
+            packageId = "rustc-std-workspace-std";
+            rename = "std";
+            optional = true;
+          }
+          {
+            name = "unicode-width";
+            packageId = "unicode-width";
+          }
+        ];
+        features = {
+          "core" = [ "dep:core" ];
+          "rustc-dep-of-std" = [ "unicode-width/rustc-dep-of-std" "std" "core" ];
+          "std" = [ "dep:std" ];
+        };
+        resolvedDefaultFeatures = [ "core" "rustc-dep-of-std" "std" ];
+      };
       "hashbrown" = rec {
         crateName = "hashbrown";
         version = "0.12.3";
@@ -382,8 +415,16 @@ rec {
             packageId = "core";
           }
           {
+            name = "panic_unwind";
+            packageId = "panic_unwind";
+          }
+          {
             name = "std";
             packageId = "std";
+          }
+          {
+            name = "test";
+            packageId = "test";
           }
         ];
 
@@ -419,6 +460,65 @@ rec {
             name = "libc";
             packageId = "libc";
             usesDefaultFeatures = false;
+          }
+        ];
+
+      };
+      "panic_unwind" = rec {
+        crateName = "panic_unwind";
+        version = "0.0.0";
+        edition = "2021";
+        # We can't filter paths with references in Nix 2.4
+        # See https://github.com/NixOS/nix/issues/5410
+        src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/panic_unwind; }
+          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/panic_unwind;
+        dependencies = [
+          {
+            name = "alloc";
+            packageId = "alloc";
+          }
+          {
+            name = "cfg-if";
+            packageId = "cfg-if";
+          }
+          {
+            name = "compiler_builtins";
+            packageId = "compiler_builtins";
+          }
+          {
+            name = "core";
+            packageId = "core";
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "unwind";
+            packageId = "unwind";
+          }
+        ];
+
+      };
+      "proc_macro" = rec {
+        crateName = "proc_macro";
+        version = "0.0.0";
+        edition = "2021";
+        # We can't filter paths with references in Nix 2.4
+        # See https://github.com/NixOS/nix/issues/5410
+        src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/proc_macro; }
+          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/proc_macro;
+        dependencies = [
+          {
+            name = "core";
+            packageId = "core";
+          }
+          {
+            name = "std";
+            packageId = "std";
           }
         ];
 
@@ -487,6 +587,24 @@ rec {
         ];
 
       };
+      "rustc-std-workspace-std" = rec {
+        crateName = "rustc-std-workspace-std";
+        version = "1.99.0";
+        edition = "2021";
+        # We can't filter paths with references in Nix 2.4
+        # See https://github.com/NixOS/nix/issues/5410
+        src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-std; }
+          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-std;
+        libPath = "lib.rs";
+        dependencies = [
+          {
+            name = "std";
+            packageId = "std";
+          }
+        ];
+
+      };
       "std" = rec {
         crateName = "std";
         version = "0.0.0";
@@ -549,6 +667,11 @@ rec {
             packageId = "panic_abort";
           }
           {
+            name = "panic_unwind";
+            packageId = "panic_unwind";
+            optional = true;
+          }
+          {
             name = "rustc-demangle";
             packageId = "rustc-demangle";
             features = [ "rustc-dep-of-std" ];
@@ -591,6 +714,7 @@ rec {
           "std_detect_file_io" = [ "std_detect/std_detect_file_io" ];
           "system-llvm-libunwind" = [ "unwind/system-llvm-libunwind" ];
         };
+        resolvedDefaultFeatures = [ "panic_unwind" "std_detect_dlsym_getauxval" "std_detect_file_io" ];
       };
       "std_detect" = rec {
         crateName = "std_detect";
@@ -617,6 +741,12 @@ rec {
             optional = true;
           }
           {
+            name = "libc";
+            packageId = "libc";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
             name = "rustc-std-workspace-alloc";
             packageId = "rustc-std-workspace-alloc";
             rename = "alloc";
@@ -640,7 +770,107 @@ rec {
           "std_detect_env_override" = [ "libc" ];
           "std_detect_file_io" = [ "libc" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "compiler_builtins" "core" "rustc-dep-of-std" ];
+        resolvedDefaultFeatures = [ "alloc" "compiler_builtins" "core" "libc" "rustc-dep-of-std" "std_detect_dlsym_getauxval" "std_detect_file_io" ];
+      };
+      "test" = rec {
+        crateName = "test";
+        version = "0.0.0";
+        edition = "2021";
+        # We can't filter paths with references in Nix 2.4
+        # See https://github.com/NixOS/nix/issues/5410
+        src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/test; }
+          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/test;type = [ "dylib" "rlib" ];
+        dependencies = [
+          {
+            name = "cfg-if";
+            packageId = "cfg-if";
+            features = [ "rustc-dep-of-std" ];
+          }
+          {
+            name = "core";
+            packageId = "core";
+          }
+          {
+            name = "getopts";
+            packageId = "getopts";
+            features = [ "rustc-dep-of-std" ];
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "panic_abort";
+            packageId = "panic_abort";
+          }
+          {
+            name = "panic_unwind";
+            packageId = "panic_unwind";
+          }
+          {
+            name = "proc_macro";
+            packageId = "proc_macro";
+          }
+          {
+            name = "std";
+            packageId = "std";
+          }
+        ];
+        features = {
+          "backtrace" = [ "std/backtrace" ];
+          "compiler-builtins-c" = [ "std/compiler-builtins-c" ];
+          "compiler-builtins-mangled-names" = [ "std/compiler-builtins-mangled-names" ];
+          "compiler-builtins-mem" = [ "std/compiler-builtins-mem" ];
+          "compiler-builtins-no-asm" = [ "std/compiler-builtins-no-asm" ];
+          "default" = [ "std_detect_file_io" "std_detect_dlsym_getauxval" "panic-unwind" ];
+          "llvm-libunwind" = [ "std/llvm-libunwind" ];
+          "panic-unwind" = [ "std/panic_unwind" ];
+          "panic_immediate_abort" = [ "std/panic_immediate_abort" ];
+          "profiler" = [ "std/profiler" ];
+          "std_detect_dlsym_getauxval" = [ "std/std_detect_dlsym_getauxval" ];
+          "std_detect_env_override" = [ "std/std_detect_env_override" ];
+          "std_detect_file_io" = [ "std/std_detect_file_io" ];
+          "system-llvm-libunwind" = [ "std/system-llvm-libunwind" ];
+        };
+        resolvedDefaultFeatures = [ "default" "panic-unwind" "std_detect_dlsym_getauxval" "std_detect_file_io" ];
+      };
+      "unicode-width" = rec {
+        crateName = "unicode-width";
+        version = "0.1.10";
+        edition = "2015";
+        sha256 = "12vc3wv0qwg8rzcgb9bhaf5119dlmd6lmkhbfy1zfls6n7jx3vf0";
+        authors = [
+          "kwantam <kwantam@gmail.com>"
+          "Manish Goregaokar <manishsmail@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "compiler_builtins";
+            packageId = "compiler_builtins";
+            optional = true;
+          }
+          {
+            name = "rustc-std-workspace-core";
+            packageId = "rustc-std-workspace-core";
+            rename = "core";
+            optional = true;
+          }
+          {
+            name = "rustc-std-workspace-std";
+            packageId = "rustc-std-workspace-std";
+            rename = "std";
+            optional = true;
+          }
+        ];
+        features = {
+          "compiler_builtins" = [ "dep:compiler_builtins" ];
+          "core" = [ "dep:core" ];
+          "rustc-dep-of-std" = [ "std" "core" "compiler_builtins" ];
+          "std" = [ "dep:std" ];
+        };
+        resolvedDefaultFeatures = [ "compiler_builtins" "core" "default" "rustc-dep-of-std" "std" ];
       };
       "unwind" = rec {
         crateName = "unwind";

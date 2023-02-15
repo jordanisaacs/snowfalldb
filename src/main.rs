@@ -134,6 +134,11 @@ fn register_signal_handler() {
         debug_assert!(r == 0);
     }
 }
+
+#[test]
+fn fail() {
+    assert!(3 == 3);
+}
 //
 // impl Into<u8> for PageStatus {
 //     fn into(self) -> u8 {

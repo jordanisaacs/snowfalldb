@@ -111,6 +111,7 @@
       .rootCrate
       .build
       .override {
+        runTests = true;
         extraDepsIsBuild = isBuildDep: (
           if isBuildDep
           then []
@@ -119,6 +120,9 @@
               mustangNix.mustangCore
               mustangNix.mustangCompilerBuiltins
               mustangNix.mustangAlloc
+              mustangNix.mustangStd
+              mustangNix.mustangPanicUnwind
+              mustangNix.mustangTest
             ])
         );
       };
