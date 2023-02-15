@@ -55,8 +55,10 @@
   deps = sysroot.rootCrate.build.dependencies;
   mustangCore = findDep deps "core";
   mustangCompilerBuiltins = findDep deps "compiler_builtins";
+  mustangAlloc = findDep deps "alloc";
   mustangStd = findDep deps "std";
+  mustangUnwind = findDep deps "unwind";
   sysrootCI = sysroot.rootCrate.build;
 in {
-  inherit sysroot sysrootCI mustangCompilerBuiltins mustangCore mustangStd;
+  inherit sysroot sysrootCI mustangCompilerBuiltins mustangCore mustangStd mustangAlloc mustangUnwind;
 }
