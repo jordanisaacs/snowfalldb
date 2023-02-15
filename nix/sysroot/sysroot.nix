@@ -40,8 +40,17 @@
             rustc-std-workspace-alloc = attrs: {src = rustLib "/rustc-std-workspace-alloc";};
             rustc-std-workspace-std = attrs: {src = rustLib "/rustc-std-workspace-std";};
             panic_abort = attrs: {src = rustLib "/panic_abort";};
+            proc_macro = attrs: {src = rustLib "/proc_macro";};
+            panic_unwind = attrs: {src = rustLib "/panic_unwind";};
             std_detect = attrs: {src = rustLib "/stdarch/crates/std_detect";};
             unwind = attrs: {src = rustLib "/unwind";};
+            test = attrs: {
+              src = rustLib "/test";
+
+              postUnpack = ''
+                ln -s ${rustLib "/panic_unwind"} $sourceRoot/..
+              '';
+            };
           };
       };
   };
@@ -58,7 +67,19 @@
   mustangAlloc = findDep deps "alloc";
   mustangStd = findDep deps "std";
   mustangUnwind = findDep deps "unwind";
+  mustangTest = findDep deps "test";
+  mustangPanicUnwind = findDep deps "panic_unwind";
   sysrootCI = sysroot.rootCrate.build;
 in {
-  inherit sysroot sysrootCI mustangCompilerBuiltins mustangCore mustangStd mustangAlloc mustangUnwind;
+  inherit
+    sysroot
+    sysrootCI
+    mustangCompilerBuiltins
+    mustangCore
+    mustangStd
+    mustangAlloc
+    mustangUnwind
+    mustangTest
+    mustangPanicUnwind
+    ;
 }

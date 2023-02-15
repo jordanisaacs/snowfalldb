@@ -15,5 +15,5 @@
 in {
   inherit (mustangHelpers) buildRustCrateForMustang;
   inherit (mustangLib) combineWrappers findDep;
-  inherit (sysrootLib) sysroot sysrootCI mustangCompilerBuiltins mustangCore mustangStd mustangAlloc mustangUnwind;
+  inherit (sysrootLib) sysroot sysrootCI mustangCompilerBuiltins mustangCore mustangStd mustangAlloc mustangUnwind mustangTest mustangPanicUnwind;
 }

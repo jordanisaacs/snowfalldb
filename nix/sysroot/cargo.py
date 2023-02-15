@@ -24,6 +24,12 @@ base = {
         "std": {
             "path": os.path.join(rust_src, "std"),
         },
+        "test": {
+            "path": os.path.join(rust_src, "test"),
+        },
+        "panic_unwind": {
+            "path": os.path.join(rust_src, "panic_unwind"),
+        },
     },
     "patch": {
         "crates-io": {

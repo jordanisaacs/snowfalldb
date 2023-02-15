@@ -61,6 +61,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "getopts"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14dbbfd5c71d70241ecf9e6f13737f7b5ce823821063188d7e46c41d371eebd5"
+dependencies = [
+ "rustc-std-workspace-core",
+ "rustc-std-workspace-std",
+ "unicode-width",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -99,7 +110,9 @@ dependencies = [
  "alloc",
  "compiler_builtins",
  "core",
+ "panic_unwind",
  "std",
+ "test",
 ]
 
 [[package]]
@@ -111,6 +124,26 @@ dependencies = [
  "compiler_builtins",
  "core",
  "libc",
+]
+
+[[package]]
+name = "panic_unwind"
+version = "0.0.0"
+dependencies = [
+ "alloc",
+ "cfg-if",
+ "compiler_builtins",
+ "core",
+ "libc",
+ "unwind",
+]
+
+[[package]]
+name = "proc_macro"
+version = "0.0.0"
+dependencies = [
+ "core",
+ "std",
 ]
 
 [[package]]
@@ -138,6 +171,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustc-std-workspace-std"
+version = "1.99.0"
+dependencies = [
+ "std",
+]
+
+[[package]]
 name = "std"
 version = "0.0.0"
 dependencies = [
@@ -151,6 +191,7 @@ dependencies = [
  "hermit-abi",
  "libc",
  "panic_abort",
+ "panic_unwind",
  "rustc-demangle",
  "std_detect",
  "unwind",
@@ -163,8 +204,34 @@ version = "0.1.5"
 dependencies = [
  "cfg-if",
  "compiler_builtins",
+ "libc",
  "rustc-std-workspace-alloc",
  "rustc-std-workspace-core",
+]
+
+[[package]]
+name = "test"
+version = "0.0.0"
+dependencies = [
+ "cfg-if",
+ "core",
+ "getopts",
+ "libc",
+ "panic_abort",
+ "panic_unwind",
+ "proc_macro",
+ "std",
+]
+
+[[package]]
+name = "unicode-width"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0edd1e5b14653f783770bce4a4dabb4a5108a5370a5f5d8cfe8710c361f6c8b"
+dependencies = [
+ "compiler_builtins",
+ "rustc-std-workspace-core",
+ "rustc-std-workspace-std",
 ]
 
 [[package]]
@@ -188,7 +255,3 @@ dependencies = [
  "rustc-std-workspace-alloc",
  "rustc-std-workspace-core",
 ]
-
-[[patch.unused]]
-name = "rustc-std-workspace-std"
-version = "1.99.0"
