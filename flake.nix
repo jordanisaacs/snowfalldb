@@ -1,11 +1,10 @@
 {
   inputs = {
-    nixpkgs.url = "github:jordanisaacs/nixpkgs/build-rust-cc";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     neovim-flake.url = "github:jordanisaacs/neovim-flake";
     crate2nix = {
-      inputs.nixpkgs.follows = "nixpkgs";
-      url = "github:jordanisaacs/crate2nix/vendor";
+      url = "github:jordanisaacs/crate2nix/target-vendor";
       flake = false;
     };
     kernelFlake = {
@@ -26,27 +25,17 @@
     ...
   }: let
     localSystem = "x86_64-linux";
-    target = "x86_64-mustang-linux-gnu";
+    mustangTarget = "x86_64-mustang-linux-gnu";
+    path = "nightlyRust";
     pkgsFunc = import nixpkgs;
 
     overlays = [
       rust-overlay.overlays.default
-      (self: super: let
-        nightlyRust = let
+      (self: super: {
+        ${path} = let
           r = self.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {extensions = ["rust-src"];});
           rustc = r;
           cargo = r;
-          # Need the rust library source
-          # the workspace crates do not put their lib.rs in a source directory.
-          # Therefore, buildRustCrate won't build anything because it checks for [src/lib.rs](https://github.com/NixOS/nixpkgs/blob/583e2bc9615cdb03daafb6b49017c0609cb97ede/pkgs/build-support/rust/build-rust-crate/build-crate.nix#L65)
-          # BASE=$out/rustc-std-workspace
-          # for BASE_PATH in $BASE-core $BASE-alloc $BASE-std
-          # do
-          #   chmod +w $BASE_PATH
-          #   mkdir -p $BASE_PATH/src
-          #   mv $BASE_PATH/lib.rs $BASE_PATH/src
-          #   chmod -w $BASE_PATH
-          # done
           rustLibSrc = self.runCommand "rust-lib-src" {} ''
             mkdir $out
             cp -r ${self.rust-bin.nightly.latest.rust-src}/lib/rustlib/src/rust/library/* $out
@@ -59,8 +48,6 @@
         in {
           inherit rustc cargo rustLibSrc sysrootCargo;
         };
-      in {
-        inherit nightlyRust;
       })
     ];
 
@@ -69,37 +56,43 @@
       inherit localSystem overlays;
     };
 
+    mustangLib = import ./nix {lib = pkgs.lib;};
+
     mustangPkgs = pkgsFunc {
       inherit localSystem overlays;
       crossSystem = {
         system = localSystem;
-        rustc = {
-          config = target;
-          platform = builtins.fromJSON (builtins.readFile "${mustangTargets}/${target}.json");
-        };
+        rustc = mustangLib.rustcCross {inherit pkgs mustangTarget;};
       };
     };
 
-    mustangNix = import ./nix {
-      inherit pkgs mustangPkgs;
-      inherit (pkgs.nightlyRust) rustc cargo rustLibSrc;
-    };
+    sysroot = mustangLib.buildSysroot path mustangPkgs;
 
     makeApp = {
       rootFeatures ? ["default"],
       release ? true,
     }:
-      pkgs.callPackage ./Cargo.nix {
-        stdenv = mustangPkgs.stdenv;
+      mustangPkgs.callPackage ./Cargo.nix {
         inherit rootFeatures release;
-        buildRustCrateForPkgs = mustangNix.combineWrappers [
-          (pkgs:
-            (mustangNix.buildRustCrateForMustang {
-              inherit (pkgs.nightlyRust) rustc cargo;
-              inherit (pkgs) buildRustCrate;
-            })
-            .override {
-              defaultCrateOverrides = pkgs.defaultCrateOverrides;
+        # Hack to avoid a `.override` that doesn't work when using `combineWrappers
+        defaultCrateOverrides = mustangPkgs.defaultCrateOverrides;
+        buildRustCrateForPkgs = mustangLib.combineWrappers [
+          (pkgs: mustangLib.buildRustCrateForPkgsPathMustang path pkgs)
+          (pkgs: args: let
+            isMustang = mustangLib.vendorIsMustang pkgs pkgs.stdenv.hostPlatform;
+          in
+            args
+            // pkgs.lib.optionalAttrs isMustang {
+              dependencies =
+                (map (d: d // {stdlib = true;}) [
+                  sysroot.mustangCore
+                  sysroot.mustangCompilerBuiltins
+                  sysroot.mustangAlloc
+                  sysroot.mustangStd
+                  sysroot.mustangPanicUnwind
+                  sysroot.mustangTest
+                ])
+                ++ args.dependencies;
             })
         ];
       };
@@ -112,19 +105,6 @@
       .build
       .override {
         runTests = true;
-        extraDepsIsBuild = isBuildDep: (
-          if isBuildDep
-          then []
-          else
-            (map (d: d // {stdlib = true;}) [
-              mustangNix.mustangCore
-              mustangNix.mustangCompilerBuiltins
-              mustangNix.mustangAlloc
-              mustangNix.mustangStd
-              mustangNix.mustangPanicUnwind
-              mustangNix.mustangTest
-            ])
-        );
       };
 
     enableGdb = true;
@@ -179,21 +159,8 @@
       modules = [./configs/editor.nix];
     };
 
-    mustangTargets = pkgs.stdenv.mkDerivation {
-      name = "mustang-target-specs";
-      src = pkgs.fetchgit {
-        url = "ssh://git@github.com/jordanisaacs/mustang";
-        rev = "928ea39da900b793690d0c38c8b79d20e7a5b92f";
-        sha256 = "1c8axd4mzficf6h3jg1gid2mjrf52xfphv1zy9sdhs4pqdbc3q73";
-      };
-      installPhase = ''
-        mkdir $out
-        cp mustang/target-specs/* $out
-      '';
-    };
-
     rustEnv = {
-      RUST_TARGET_PATH = mustangTargets;
+      RUST_TARGET_PATH = mustangLib.mustangTargets pkgs;
     };
 
     nativeBuildInputs = with pkgs; [
@@ -220,7 +187,7 @@
     compileFlags = "-I${kernel.dev}/lib/modules/${kernel.modDirVersion}/source/include";
   in {
     packages.${localSystem} = {
-      inherit snowfalldb mustangNix;
+      inherit snowfalldb sysroot;
       nightlyRust = pkgs.nightlyRust;
     };
 

@@ -90,8 +90,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/alloc; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/alloc;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/alloc; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/alloc;
         dependencies = [
           {
             name = "compiler_builtins";
@@ -184,8 +184,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/core; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/core;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/core; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/core;
         features = {
         };
       };
@@ -436,8 +436,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/panic_abort; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/panic_abort;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/panic_abort; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/panic_abort;
         dependencies = [
           {
             name = "alloc";
@@ -471,8 +471,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/panic_unwind; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/panic_unwind;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/panic_unwind; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/panic_unwind;
         dependencies = [
           {
             name = "alloc";
@@ -509,8 +509,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/proc_macro; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/proc_macro;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/proc_macro; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/proc_macro;
         dependencies = [
           {
             name = "core";
@@ -558,8 +558,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-alloc; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-alloc;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/rustc-std-workspace-alloc; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/rustc-std-workspace-alloc;
         libPath = "lib.rs";
         dependencies = [
           {
@@ -576,8 +576,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-core; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-core;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/rustc-std-workspace-core; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/rustc-std-workspace-core;
         libPath = "lib.rs";
         dependencies = [
           {
@@ -594,8 +594,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-std; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/rustc-std-workspace-std;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/rustc-std-workspace-std; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/rustc-std-workspace-std;
         libPath = "lib.rs";
         dependencies = [
           {
@@ -612,8 +612,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/std; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/std;type = [ "dylib" "rlib" ];
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/std; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/std;type = [ "dylib" "rlib" ];
         dependencies = [
           {
             name = "alloc";
@@ -723,8 +723,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/stdarch/crates/std_detect; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/stdarch/crates/std_detect;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/stdarch/crates/std_detect; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/stdarch/crates/std_detect;
         authors = [
           "Alex Crichton <alex@alexcrichton.com>"
           "Andrew Gallant <jamslam@gmail.com>"
@@ -779,8 +779,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/test; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/test;type = [ "dylib" "rlib" ];
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/test; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/test;type = [ "dylib" "rlib" ];
         dependencies = [
           {
             name = "cfg-if";
@@ -879,8 +879,8 @@ rec {
         # We can't filter paths with references in Nix 2.4
         # See https://github.com/NixOS/nix/issues/5410
         src = if ((lib.versionOlder builtins.nixVersion "2.4pre20211007") || (lib.versionOlder "2.5" builtins.nixVersion ))
-          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/unwind; }
-          else /nix/store/7i4yy23gi1981za3jgxlx2zjsilavmrr-rust-lib-src/unwind;
+          then lib.cleanSourceWith { filter = sourceFilter;  src = /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/unwind; }
+          else /nix/store/imfgnzqbfaayhhm1v04n51i96k1r2qms-rust-lib-src/unwind;
         dependencies = [
           {
             name = "cfg-if";
@@ -967,12 +967,12 @@ rec {
     os = pkgs.rust.lib.toTargetOs platform;
     arch = pkgs.rust.lib.toTargetArch platform;
     family = pkgs.rust.lib.toTargetFamily platform;
+    vendor = pkgs.rust.lib.toTargetVendor platform;
     env = "gnu";
     endian =
       if platform.parsed.cpu.significantByte.name == "littleEndian"
       then "little" else "big";
     pointer_width = toString platform.parsed.cpu.bits;
-    vendor = platform.rustc.platform.vendor or platform.parsed.vendor.name;
     debug_assertions = false;
   };
 
@@ -1112,8 +1112,6 @@ rec {
     , runTests ? false
     , testCrateFlags ? [ ]
     , testInputs ? [ ]
-    # A function that takes in whether the crate is a build dependency, and what dependencies to add
-    , extraDepsIsBuild ? _: [ ]
       # Any command to run immediatelly before a test is executed.
     , testPreRun ? ""
       # Any command run immediatelly after a test is executed.
@@ -1125,7 +1123,6 @@ rec {
         , crateOverrides
         , runTests
         , testCrateFlags
-        , extraDepsIsBuild
         , testInputs
         , testPreRun
         , testPostRun
@@ -1144,12 +1141,12 @@ rec {
                   }
               );
           builtRustCrates = builtRustCratesWithFeatures {
-            inherit packageId features extraDepsIsBuild;
+            inherit packageId features;
             buildRustCrateForPkgsFunc = buildRustCrateForPkgsFuncOverriden;
             runTests = false;
           };
           builtTestRustCrates = builtRustCratesWithFeatures {
-            inherit packageId features extraDepsIsBuild;
+            inherit packageId features;
             buildRustCrateForPkgsFunc = buildRustCrateForPkgsFuncOverriden;
             runTests = true;
           };
@@ -1167,7 +1164,7 @@ rec {
         in
         derivation
       )
-      { inherit features crateOverrides runTests testCrateFlags testInputs testPreRun testPostRun extraDepsIsBuild; };
+      { inherit features crateOverrides runTests testCrateFlags testInputs testPreRun testPostRun; };
 
   /* Returns an attr set with packageId mapped to the result of buildRustCrateForPkgsFunc
     for the corresponding crate.
@@ -1178,7 +1175,6 @@ rec {
     , crateConfigs ? crates
     , buildRustCrateForPkgsFunc
     , runTests
-    , extraDepsIsBuild
     , makeTarget ? makeDefaultTarget
     } @ args:
       assert (builtins.isAttrs crateConfigs);
@@ -1196,17 +1192,17 @@ rec {
             }
           );
         # Memoize built packages so that reappearing packages are only built once.
-        builtByPackageIdByPkgs = mkBuiltByPackageIdByPkgs false pkgs;
-        mkBuiltByPackageIdByPkgs = isBuildDep: pkgs:
+        builtByPackageIdByPkgs = mkBuiltByPackageIdByPkgs pkgs;
+        mkBuiltByPackageIdByPkgs = pkgs:
           let
             self = {
-              crates = lib.mapAttrs (packageId: value: buildByPackageIdForPkgsImpl self pkgs packageId isBuildDep) crateConfigs;
-              target = makeTarget (if isBuildDep then stdenv.buildPlatform else stdenv.hostPlatform);
-              build = mkBuiltByPackageIdByPkgs true pkgs.buildPackages;
+              crates = lib.mapAttrs (packageId: value: buildByPackageIdForPkgsImpl self pkgs packageId) crateConfigs;
+              target = makeTarget pkgs.stdenv.hostPlatform;
+              build = mkBuiltByPackageIdByPkgs pkgs.buildPackages;
             };
           in
           self;
-        buildByPackageIdForPkgsImpl = self: pkgs: packageId: isBuildDep:
+        buildByPackageIdForPkgsImpl = self: pkgs: packageId:
           let
             features = mergedFeatures."${packageId}" or [ ];
             crateConfig' = crateConfigs."${packageId}";
@@ -1217,7 +1213,7 @@ rec {
                 (runTests && packageId == rootPackageId)
                 (crateConfig'.devDependencies or [ ]);
             dependencies =
-              (dependencyDerivations {
+              dependencyDerivations {
                 inherit features;
                 inherit (self) target;
                 buildByPackageId = depPackageId:
@@ -1228,7 +1224,7 @@ rec {
                 dependencies =
                   (crateConfig.dependencies or [ ])
                   ++ devDependencies;
-              }) ++ (extraDepsIsBuild isBuildDep);
+              };
             buildDependencies =
               dependencyDerivations {
                 inherit features;
@@ -1288,7 +1284,6 @@ rec {
                   }
                 );
                 extraRustcOpts = lib.lists.optional (targetFeatures != [ ]) "-C target-feature=${lib.concatMapStringsSep "," (x: "+${x}") targetFeatures}";
-                crossCompile = !isBuildDep;
                 inherit features dependencies buildDependencies crateRenames release;
               }
             );
