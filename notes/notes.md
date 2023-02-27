@@ -2,8 +2,7 @@
 
 ## Address Types
 
-1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space
-2. Physical Addresses: used between processor and system's memory.
+1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space 2. Physical Addresses: used between processor and system's memory.
 3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
 4. Kernel virtual addresses: do not necessary have a linear one to one mapping to physical addresses. All logical addresses _are_ vritual addresses. `vmalloc` returns a virtual address (but no direct physical mapping)
 
@@ -11,7 +10,7 @@
 
 ## [Kernel GFP Flags](https://lwn.net/Articles/920891/)
 
-TODO
+They are "get free page" flags, but now used much more widely. But only relevant for *full-page* allocations
 
 ## [VMTouch](https://hoytech.com/vmtouch/)
 
@@ -93,6 +92,8 @@ See [System V ABI](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf) for t
 ## Rust
 
 ### [Origin](https://github.com/sunfishcode/mustang/tree/main/origin)
+
+Origin for logging uses a function in `.init_array` to set up an `env_logger`. Cannot be used in `no_std`. Need to write your own `.init_array` function
 
 ### main()
 
@@ -179,6 +180,10 @@ Handlers should not block. Instead
 2. Return error indicating operation would block
 3. Run it asynchronously and signal completion by calling the given `done()` function
 
+### [io_uring and networking in 2023](https://github.com/axboe/liburing/wiki/io_uring-and-networking-in-2023)
+
+TODO
+
 ## [The Necessary Death of the Block Device Interface](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
 
 TODO
@@ -214,6 +219,10 @@ An attacker can change values in memory without knowing the encryption key - an 
 > The basic principle of SEV-SNP integrity is that if a VM is able to read a private (encrypted) page of memory, it must always read the value it last wrote.
 
 ### [The Linux SVSM project](https://lwn.net/Articles/921266/)
+
+TODO
+
+### [A Comparison Study of Intel SGX and AMD Memory Encryption Technology](https://caslab.csl.yale.edu/workshops/hasp2018/HASP18_a9-mofrad_slides.pdf)
 
 TODO
 
@@ -514,6 +523,13 @@ Defaults to version 2 when edition is 2021. Features enabled on build-dependenci
 
 Using a sysroot to cross compile `core` and `std`. rustc can cross compile so do not need to build rust itself for the target platform. The sysroot is just a crate that depends directly on core, std, and compiler_builtins (using paths). This lets us generate a Cargo.lock which in turn can generate a Cargo.nix. Now our "core" and "std" dependencies are not using the prebuilt ones, but instead our custom cross compiled version.
 
+For mustang we do not care about cross compiling any other dependencies
+the passed `rustc` and `cargo` commands (should be the build)
+
+## build-rust-crate
+
+Target is set in `build-crate.nix` based on the stdenv [source](https://github.com/NixOS/nixpkgs/blob/refs%2Fheads%2Fnixpkgs-unstable/pkgs/build-support/rust/build-rust-crate/build-crate.nix#L24).
+
 ## [Cross Compilation - nix.dev](https://nix.dev/tutorials/cross-compilation)
 
 Build platform: Where executable is built
@@ -551,12 +567,101 @@ There are a set of predefined host platforms in `pkgsCross` - retrieve platform 
 * [First](https://github.com/NixOS/nixpkgs/blob/refs%2Fheads%2Fnixpkgs-unstable/pkgs/top-level/default.nix#L123) retrieves the boot function by just importing `booter.nix`
 * [Second](https://github.com/NixOS/nixpkgs/blob/6d87734c880d704f6ee13e5c0fe835b98918c34e/pkgs/top-level/default.nix#L125) retrieves the stages by just calling `stdenv/default.nix`
 
-## [crate2nix Cross Compilation]
+## crate2nix Cross Compilation
 
-rustc can cross compile already, so do not need to bootstrap it for the target platform, just need it for the host platform. Thus can generally just use the existing toolchain we have (either through nixpkgs or an overlay, eg. oxalica's rust-overlay)
+rustc can cross compile already, so do not need to bootstrap the compiler for the host platform. Only need to bootstrap the core/std libraries. Thus can use the existing toolchain we have (either through nixpkgs or an overlay, eg. oxalica's rust-overlay). Therefore, we are going to override the `buildRustCrate` function to always make sure we are never attempting to compile the compiler. This is done by checking the `hostPlatform` of the pkgs being used to compile the rust crate:
 
-Once you have a toolchain, need to make a sysroot. This is to force a compilation of `core`, `std`, etc. See 
+```nix
+{
+vendorIsMustang = pkgs: platform:
+  pkgs.rust.lib.toTargetVendor platform == "mustang";
 
+chooseRustPlatform = path: pkgs:
+  if vendorIsMustang pkgs pkgs.stdenv.hostPlatform
+  # going up stages to ensure the compiler isn't cross compiled
+  then pkgs.buildPackages.buildPackages.${path}
+  else pkgs.buildPackages.${path};
+
+buildRustCrateForPkgsPathMustang = path: pkgs: let
+  platform = chooseRustPlatform path pkgs;
+in
+  pkgs.buildRustCrate.override {
+    inherit (platform) rustc cargo;
+  };
+}
+```
+
+It works because in the generated `Cargo.nix`, build dependencies and proc macros pass `pkgs.buildPackages` rather than `pkgs` into the `buildRustCrateForPkgs` function. See [here](https://github.com/kolloch/crate2nix/blob/c158203fb0ff6684c35601824ff9f3b78e4dd4ed/crate2nix/templates/nix/crate2nix/default.nix#L263).
+
+```nix
+{
+# Memoize built packages so that reappearing packages are only built once.
+builtByPackageIdByPkgs = mkBuiltByPackageIdByPkgs pkgs;
+mkBuiltByPackageIdByPkgs = pkgs:
+  let
+    self = {
+      crates = lib.mapAttrs (packageId: value: buildByPackageIdForPkgsImpl self pkgs packageId) crateConfigs;
+      target = makeTarget pkgs.stdenv.hostPlatform;
+      # Notice that we pass `pkgs.buildPackages`, not `pkgs` for build dependencies
+      build = mkBuiltByPackageIdByPkgs pkgs.buildPackages;
+    };
+  in
+  self;
+}
+```
+
+Now that you have a function that can compile `core`, `std`, etc. We need to create the sysroot that actually does that. The goal is to get a `Cargo.nix` file that can build our dependenices. We do this through the [update-lockfile.sh](../nix/sysroot/update-lockfile.sh) script. It uses the [cargo.py](../nix/sysroot/cargo.py) script to generate a temporary `Cargo.toml` file which specifies `std`, `core`, etc with paths pointing to our nix provided toolchain source. Then it generates a lock file and calls `crate2nix generate`. However, this `Cargo.nix` file is pointing to absolute nix store paths. So our [derivation](../nix/sysroot/sysroot-cargo.nix) substitutes those absolute paths with the actual nix store paths (but due to how the file was generated they should be the same).
+
+Now that you have a derivation that provides your sysroot, you can compile a package. In addition to using your special build function:
+
+```nix
+buildRustCrateForPkgs = pkgs: pkgs.buildRustCrateForPkgsPathMustang path pkgs;
+```
+
+you need to override the sysroot dependencies, but only for your non-build dependencies. Thus we use a `combineWrapper` function that lets you override the arguments passed to `buildRustCrate`:
+
+```nix
+combineWrappers = funs: pkgs: args:
+  lib.foldr (f: a: f a) args (builtins.map (f: f pkgs) funs);
+```
+
+This lets you provide a new function that when it sees we are compiling a crate for our cross compilation, to override the dependencies:
+
+```nix
+mustangPkgs.callPackage ./Cargo.nix {
+  inherit rootFeatures release;
+  # Hack to avoid a `.override` that doesn't work when using `combineWrappers
+  defaultCrateOverrides = mustangPkgs.defaultCrateOverrides;
+  buildRustCrateForPkgs = mustangLib.combineWrappers [
+    (pkgs: mustangLib.buildRustCrateForPkgsPathMustang path pkgs)
+    (pkgs: args: let
+      isMustang = mustangLib.vendorIsMustang pkgs pkgs.stdenv.hostPlatform;
+    in
+      args
+      // pkgs.lib.optionalAttrs isMustang {
+        dependencies =
+          (map (d: d // {stdlib = true;}) [
+            sysroot.mustangCore
+            sysroot.mustangCompilerBuiltins
+            sysroot.mustangAlloc
+            sysroot.mustangStd
+            sysroot.mustangPanicUnwind
+            sysroot.mustangTest
+          ])
+          ++ args.dependencies;
+      })
+  ];
+};
+```
+
+Note the hack comment, this is because `crate2nix` will attempt to [override](https://github.com/kolloch/crate2nix/blob/c158203fb0ff6684c35601824ff9f3b78e4dd4ed/crate2nix/templates/nix/crate2nix/default.nix#L203) our `buildRustCrateForPkgs` functions if it isn't set. This would fail due to our wrapper.
+
+
+## [Understanding Nix's String Context](https://shealevy.com/blog/2018/08/05/understanding-nixs-string-context/)
+
+> Investigated this when encountering stirng context errors with crate2nix
+
+Nix tracks the dependency information is associated with strings themselves. Stored as metadata known as **string context**
 
 # SnowfallDB Design
 
@@ -631,7 +736,3 @@ BTree for indexing (what type?)
 ### 
 
 Hybrid storage layout (proteus?)
-
-# Fun Links
-
-* [The Jargon File](http://www.catb.org/jargon/html/index.html)
