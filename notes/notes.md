@@ -656,6 +656,7 @@ mustangPkgs.callPackage ./Cargo.nix {
 
 Note the hack comment, this is because `crate2nix` will attempt to [override](https://github.com/kolloch/crate2nix/blob/c158203fb0ff6684c35601824ff9f3b78e4dd4ed/crate2nix/templates/nix/crate2nix/default.nix#L203) our `buildRustCrateForPkgs` functions if it isn't set. This would fail due to our wrapper.
 
+Thanks to [alamgu](https://github.com/alamgu/alamgu) as this was based on/deciphered from their source code.
 
 ## [Understanding Nix's String Context](https://shealevy.com/blog/2018/08/05/understanding-nixs-string-context/)
 
