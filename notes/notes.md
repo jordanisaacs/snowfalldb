@@ -593,23 +593,6 @@ in
 
 It works because in the generated `Cargo.nix`, build dependencies and proc macros pass `pkgs.buildPackages` rather than `pkgs` into the `buildRustCrateForPkgs` function. See [here](https://github.com/kolloch/crate2nix/blob/c158203fb0ff6684c35601824ff9f3b78e4dd4ed/crate2nix/templates/nix/crate2nix/default.nix#L263).
 
-```nix
-{
-# Memoize built packages so that reappearing packages are only built once.
-builtByPackageIdByPkgs = mkBuiltByPackageIdByPkgs pkgs;
-mkBuiltByPackageIdByPkgs = pkgs:
-  let
-    self = {
-      crates = lib.mapAttrs (packageId: value: buildByPackageIdForPkgsImpl self pkgs packageId) crateConfigs;
-      target = makeTarget pkgs.stdenv.hostPlatform;
-      # Notice that we pass `pkgs.buildPackages`, not `pkgs` for build dependencies
-      build = mkBuiltByPackageIdByPkgs pkgs.buildPackages;
-    };
-  in
-  self;
-}
-```
-
 Now that you have a function that can compile `core`, `std`, etc. We need to create the sysroot that actually does that. The goal is to get a `Cargo.nix` file that can build our dependenices. We do this through the [update-lockfile.sh](../nix/sysroot/update-lockfile.sh) script. It uses the [cargo.py](../nix/sysroot/cargo.py) script to generate a temporary `Cargo.toml` file which specifies `std`, `core`, etc with paths pointing to our nix provided toolchain source. Then it generates a lock file and calls `crate2nix generate`. However, this `Cargo.nix` file is pointing to absolute nix store paths. So our [derivation](../nix/sysroot/sysroot-cargo.nix) substitutes those absolute paths with the actual nix store paths (but due to how the file was generated they should be the same).
 
 Now that you have a derivation that provides your sysroot, you can compile a package. In addition to using your special build function:
