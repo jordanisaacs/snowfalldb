@@ -227,16 +227,16 @@
     "crate2nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1676433156,
-        "narHash": "sha256-kEaz5yUc5IhFbmKhKH8dogeexrDj7WB1dKCalZfsQpw=",
+        "lastModified": 1677027921,
+        "narHash": "sha256-GV47XV/2PN7QE+NZcGAfmk+dXnZn5r1D7zM/xUbArVo=",
         "owner": "jordanisaacs",
         "repo": "crate2nix",
-        "rev": "6ac624577ad28dc0cf0e97e3dce48b2d56a17f36",
+        "rev": "1462c6dff2e049931e2244c916cb36f3716dfdf7",
         "type": "github"
       },
       "original": {
         "owner": "jordanisaacs",
-        "ref": "vendor",
+        "ref": "target-vendor",
         "repo": "crate2nix",
         "type": "github"
       }
@@ -985,16 +985,16 @@
     },
     "nixpkgs_8": {
       "locked": {
-        "lastModified": 1676433260,
-        "narHash": "sha256-Z4i4Xu1I1dyaabNgb7RGwA3l8GWDvqNk/puJMc7ER2c=",
-        "owner": "jordanisaacs",
+        "lastModified": 1677383253,
+        "narHash": "sha256-UfpzWfSxkfXHnb4boXZNaKsAcUrZT9Hw+tao1oZxd08=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "97ea340f50fdfdf0979c4520fd587cdaae76e5de",
+        "rev": "9952d6bc395f5841262b006fbace8dd7e143b634",
         "type": "github"
       },
       "original": {
-        "owner": "jordanisaacs",
-        "ref": "build-rust-cc",
+        "owner": "nixos",
+        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
