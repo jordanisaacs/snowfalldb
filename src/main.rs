@@ -15,7 +15,12 @@ use linux_raw_sys::{
         SA_SIGINFO, SIGSEGV,
     },
 };
-use rustix::io::stdout;
+use rustix::{
+    fd::AsRawFd,
+    fs::{cwd, Mode, OFlags},
+    io::stdout,
+};
+use rustix_uring::{opcode, types, IoUring};
 use sjlj::{siglongjmp, sigsetjmp, SigJumpBuf};
 
 extern crate alloc;
@@ -66,6 +71,32 @@ extern "C" fn main(_argc: c_int, _argv: *mut *mut u8, _envp: *mut *mut u8) -> c_
     }
     write!(&mut b, "Return Jumped: {}\n", ret).unwrap();
     rustix::io::write(fd, b.as_bytes()).unwrap();
+    let mut ring = IoUring::new(8).unwrap();
+
+    let fd = rustix::fs::openat(cwd(), "README.md", OFlags::RDONLY, Mode::empty()).unwrap();
+
+    let mut buf = alloc::vec![0; 1024];
+
+    let read_e = opcode::Read::new(types::Fd(fd.as_raw_fd()), buf.as_mut_ptr(), buf.len() as _)
+        .build()
+        .user_data(types::IoringUserData { u64_: 0x42 });
+
+    // Note that the developer needs to ensure
+    // that the entry pushed into submission queue is valid (e.g. fd, buffer).
+    unsafe {
+        ring.submission()
+            .push(&read_e)
+            .expect("submission queue is full");
+    }
+
+    ring.submit_and_wait(1).unwrap();
+
+    let cqe = ring.completion().next().expect("completion queue is empty");
+    rustix::io::write(unsafe { stdout() }, &buf).unwrap();
+
+    assert_eq!(cqe.user_data().u64_(), 0x42);
+    assert!(cqe.result() >= 0, "read error: {}", cqe.result());
+
     0
 }
 

@@ -187,7 +187,7 @@ rec {
         dependencies = [
           {
             name = "errno";
-            packageId = "errno";
+            packageId = "errno 0.2.8";
             usesDefaultFeatures = false;
           }
           {
@@ -233,7 +233,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.36.8";
             usesDefaultFeatures = false;
             features = [ "fs" "itoa" "net" "param" "process" "rand" "termios" "thread" "time" ];
           }
@@ -303,7 +303,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "global" ];
       };
-      "errno" = rec {
+      "errno 0.2.8" = rec {
         crateName = "errno";
         version = "0.2.8";
         edition = "2015";
@@ -337,6 +337,46 @@ rec {
             packageId = "winapi";
             target = { target, features }: (target."windows" or false);
             features = [ "errhandlingapi" "minwindef" "ntdef" "winbase" ];
+          }
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+      };
+      "errno 0.3.0" = rec {
+        crateName = "errno";
+        version = "0.3.0";
+        edition = "2018";
+        sha256 = "185gqhl5389apaqki46wv5k57rc4lbaqin4sx0zlg7crdjbs1mjh";
+        authors = [
+          "Chris Wong <lambda.fairy@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "errno-dragonfly";
+            packageId = "errno-dragonfly";
+            target = { target, features }: ("dragonfly" == target."os");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: ("hermit" == target."os");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: ("wasi" == target."os");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: (target."unix" or false);
+          }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys";
+            target = { target, features }: (target."windows" or false);
+            features = [ "Win32_Foundation" "Win32_System_Diagnostics_Debug" ];
           }
         ];
         features = {
@@ -459,7 +499,7 @@ rec {
           "default" = [ "std" "general" "errno" ];
           "rustc-dep-of-std" = [ "core" "compiler_builtins" "no_std" ];
         };
-        resolvedDefaultFeatures = [ "general" "no_std" ];
+        resolvedDefaultFeatures = [ "errno" "general" "ioctl" "no_std" ];
       };
       "lock_api" = rec {
         crateName = "lock_api";
@@ -679,7 +719,7 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.36.8";
             usesDefaultFeatures = false;
             features = [ "mm" "thread" "time" "runtime" "param" "process" ];
           }
@@ -821,7 +861,7 @@ rec {
           }
           {
             name = "errno";
-            packageId = "errno";
+            packageId = "errno 0.2.8";
             usesDefaultFeatures = false;
           }
           {
@@ -834,7 +874,7 @@ rec {
           "default" = [ "std" ];
         };
       };
-      "rustix" = rec {
+      "rustix 0.36.8" = rec {
         crateName = "rustix";
         version = "0.36.8";
         edition = "2018";
@@ -850,7 +890,7 @@ rec {
           }
           {
             name = "errno";
-            packageId = "errno";
+            packageId = "errno 0.2.8";
             rename = "libc_errno";
             optional = true;
             usesDefaultFeatures = false;
@@ -858,7 +898,7 @@ rec {
           }
           {
             name = "errno";
-            packageId = "errno";
+            packageId = "errno 0.2.8";
             rename = "libc_errno";
             usesDefaultFeatures = false;
             target = { target, features }: ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch")))))));
@@ -906,7 +946,7 @@ rec {
         devDependencies = [
           {
             name = "errno";
-            packageId = "errno";
+            packageId = "errno 0.2.8";
             rename = "libc_errno";
             usesDefaultFeatures = false;
           }
@@ -939,6 +979,143 @@ rec {
           "use-libc-auxv" = [ "libc" ];
         };
         resolvedDefaultFeatures = [ "fs" "io_uring" "itoa" "mm" "net" "param" "process" "rand" "runtime" "termios" "thread" "time" ];
+      };
+      "rustix 0.37.0-alpha.0" = rec {
+        crateName = "rustix";
+        version = "0.37.0-alpha.0";
+        edition = "2018";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/jordanisaacs/rustix.git";
+          rev = "8fb1fb541a92cd357f5ed92686cb3974f5c1989c";
+          sha256 = "0xwxsxij84wk7ych8x1q1r864g96pkrxb44169vdn18m3mlkrgpf";
+        };
+        authors = [
+          "Dan Gohman <dev@sunfishcode.online>"
+          "Jakub Konka <kubkon@jakubkonka.com>"
+        ];
+        dependencies = [
+          {
+            name = "bitflags";
+            packageId = "bitflags";
+          }
+          {
+            name = "errno";
+            packageId = "errno 0.3.0";
+            rename = "libc_errno";
+            optional = true;
+            usesDefaultFeatures = false;
+            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && ("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch")))));
+          }
+          {
+            name = "errno";
+            packageId = "errno 0.3.0";
+            rename = "libc_errno";
+            usesDefaultFeatures = false;
+            target = { target, features }: ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch")))))));
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            optional = true;
+            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && ("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch")))));
+            features = [ "extra_traits" ];
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch")))))));
+            features = [ "extra_traits" ];
+          }
+          {
+            name = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.2.2";
+            usesDefaultFeatures = false;
+            target = { target, features }: ((("android" == target."os") || ("linux" == target."os")) && ((target."rustix_use_libc" or false) || (target."miri" or false) || (!(("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch"))))))));
+            features = [ "general" "no_std" ];
+          }
+          {
+            name = "linux-raw-sys";
+            packageId = "linux-raw-sys 0.2.2";
+            usesDefaultFeatures = false;
+            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && ("linux" == target."os") && (("x86" == target."arch") || (("x86_64" == target."arch") && ("64" == target."pointer_width")) || (("little" == target."endian") && (("arm" == target."arch") || (("aarch64" == target."arch") && ("64" == target."pointer_width")) || ("powerpc64" == target."arch") || ("riscv64" == target."arch") || ("mips" == target."arch") || ("mips64" == target."arch")))));
+            features = [ "general" "errno" "ioctl" "no_std" ];
+          }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys";
+            target = { target, features }: (target."windows" or false);
+            features = [ "Win32_Foundation" "Win32_Networking_WinSock" "Win32_NetworkManagement_IpHelper" "Win32_System_Threading" ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "errno";
+            packageId = "errno 0.3.0";
+            rename = "libc_errno";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+        ];
+        features = {
+          "all-apis" = [ "fs" "io_uring" "mm" "net" "param" "process" "procfs" "rand" "runtime" "termios" "thread" "time" ];
+          "all-impls" = [ "os_pipe" "fs-err" ];
+          "alloc" = [ "dep:alloc" ];
+          "cc" = [ "dep:cc" ];
+          "compiler_builtins" = [ "dep:compiler_builtins" ];
+          "core" = [ "dep:core" ];
+          "default" = [ "std" "use-libc-auxv" ];
+          "fs-err" = [ "io-lifetimes/fs-err" ];
+          "io-lifetimes" = [ "dep:io-lifetimes" ];
+          "io_uring" = [ "fs" "net" ];
+          "itoa" = [ "dep:itoa" ];
+          "libc" = [ "dep:libc" ];
+          "libc_errno" = [ "dep:libc_errno" ];
+          "linux_latest" = [ "linux_4_11" ];
+          "once_cell" = [ "dep:once_cell" ];
+          "os_pipe" = [ "io-lifetimes/os_pipe" ];
+          "param" = [ "fs" ];
+          "procfs" = [ "once_cell" "itoa" "fs" ];
+          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins" "linux-raw-sys/rustc-dep-of-std" "bitflags/rustc-dep-of-std" ];
+          "std" = [ "io-lifetimes" ];
+          "use-libc" = [ "libc_errno" "libc" ];
+          "use-libc-auxv" = [ "libc" ];
+        };
+        resolvedDefaultFeatures = [ "fs" "io_uring" "mm" "net" "time" ];
+      };
+      "rustix-uring" = rec {
+        crateName = "rustix-uring";
+        version = "0.1.0";
+        edition = "2018";
+        workspace_member = null;
+        src = pkgs.fetchgit {
+          url = "https://github.com/jordanisaacs/rustix-uring.git";
+          rev = "92b93a36f6c665e13f78f57ee350c34499f8b774";
+          sha256 = "0b4yjvbghmyza8bjrm9wc5ilzqv8n1nx6k2c9d5shnw14mkdimh7";
+        };
+        authors = [
+          "Jordan Isaacs <mail@jdisaacs.com>"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "rustix";
+            packageId = "rustix 0.37.0-alpha.0";
+            usesDefaultFeatures = false;
+            features = [ "io_uring" "mm" "time" ];
+          }
+        ];
+        features = {
+          "default" = [ "std" ];
+          "std" = [ "rustix/std" ];
+        };
       };
       "sc" = rec {
         crateName = "sc";
@@ -1036,9 +1213,14 @@ rec {
           }
           {
             name = "rustix";
-            packageId = "rustix";
+            packageId = "rustix 0.36.8";
             usesDefaultFeatures = false;
             features = [ "fs" "io_uring" ];
+          }
+          {
+            name = "rustix-uring";
+            packageId = "rustix-uring";
+            usesDefaultFeatures = false;
           }
           {
             name = "sc";
@@ -1057,9 +1239,9 @@ rec {
       };
       "syn" = rec {
         crateName = "syn";
-        version = "1.0.107";
+        version = "1.0.109";
         edition = "2018";
-        sha256 = "1xg3315vx8civ8y0l5zxq5mkx07qskaqwnjak18aw0vfn6sn8h0z";
+        sha256 = "0ds2if4600bd59wsv7jjgfkayfzy3hnazs394kz6zdkmna8l3dkj";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -1463,7 +1645,7 @@ rec {
           "Win32_UI_WindowsAndMessaging" = [ "Win32_UI" ];
           "Win32_UI_Wpf" = [ "Win32_UI" ];
         };
-        resolvedDefaultFeatures = [ "Win32" "Win32_Foundation" "Win32_NetworkManagement" "Win32_NetworkManagement_IpHelper" "Win32_Networking" "Win32_Networking_WinSock" "Win32_System" "Win32_System_Threading" "default" ];
+        resolvedDefaultFeatures = [ "Win32" "Win32_Foundation" "Win32_NetworkManagement" "Win32_NetworkManagement_IpHelper" "Win32_Networking" "Win32_Networking_WinSock" "Win32_System" "Win32_System_Diagnostics" "Win32_System_Diagnostics_Debug" "Win32_System_Threading" "default" ];
       };
       "windows-targets" = rec {
         crateName = "windows-targets";

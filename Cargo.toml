@@ -10,6 +10,7 @@ edition = "2021"
 mustang = { git = "https://github.com/sunfishcode/mustang.git", default-features = false, features = ["threads", "default-alloc"] }
 sc = "0.2.7"
 sjlj = "0.1.3"
+rustix-uring = { git = "https://github.com/jordanisaacs/rustix-uring.git", default-features = false }
 linux-raw-sys = { version = "0.2.1", default-features = false, features = ["no_std", "general"]}
 rustix = { version = "0.36.7", default-features = false, features = ["fs", "io_uring"]}
 atomic = "0.5"

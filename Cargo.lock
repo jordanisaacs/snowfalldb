@@ -37,7 +37,7 @@ name = "c-scape"
 version = "0.6.1"
 source = "git+https://github.com/sunfishcode/mustang.git#1740db4aeef18b430dc3d64acc660388340da172"
 dependencies = [
- "errno",
+ "errno 0.2.8",
  "libc",
  "libm",
  "log",
@@ -47,7 +47,7 @@ dependencies = [
  "rand_core",
  "rand_pcg",
  "realpath-ext",
- "rustix",
+ "rustix 0.36.8",
 ]
 
 [[package]]
@@ -80,6 +80,17 @@ dependencies = [
  "errno-dragonfly",
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "errno"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50d6a0976c999d473fe89ad888d5a284e55366d9dc9038b1ba2aa15128c4afa0"
+dependencies = [
+ "errno-dragonfly",
+ "libc",
+ "windows-sys",
 ]
 
 [[package]]
@@ -199,7 +210,7 @@ dependencies = [
  "lock_api",
  "log",
  "memoffset",
- "rustix",
+ "rustix 0.36.8",
 ]
 
 [[package]]
@@ -251,7 +262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11fde02837330185f11d83353368cc662139e05c9ce32bf46775d7c223943a3e"
 dependencies = [
  "bitflags",
- "errno",
+ "errno 0.2.8",
  "libc",
 ]
 
@@ -262,11 +273,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f43abb88211988493c1abb44a70efa56ff0ce98f233b7b276146f1f3f7ba9644"
 dependencies = [
  "bitflags",
- "errno",
+ "errno 0.2.8",
  "itoa",
  "libc",
  "linux-raw-sys 0.1.4",
  "windows-sys",
+]
+
+[[package]]
+name = "rustix"
+version = "0.37.0-alpha.0"
+source = "git+https://github.com/jordanisaacs/rustix.git?branch=iouring-flags#8fb1fb541a92cd357f5ed92686cb3974f5c1989c"
+dependencies = [
+ "bitflags",
+ "errno 0.3.0",
+ "libc",
+ "linux-raw-sys 0.2.2",
+ "windows-sys",
+]
+
+[[package]]
+name = "rustix-uring"
+version = "0.1.0"
+source = "git+https://github.com/jordanisaacs/rustix-uring.git#92b93a36f6c665e13f78f57ee350c34499f8b774"
+dependencies = [
+ "libc",
+ "rustix 0.37.0-alpha.0",
 ]
 
 [[package]]
@@ -301,16 +333,17 @@ dependencies = [
  "log",
  "mustang",
  "origin",
- "rustix",
+ "rustix 0.36.8",
+ "rustix-uring",
  "sc",
  "sjlj",
 ]
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
 dependencies = [
  "proc-macro2",
  "quote",

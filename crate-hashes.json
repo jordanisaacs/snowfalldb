@@ -2,5 +2,7 @@
   "c-gull 0.6.1 (git+https://github.com/sunfishcode/mustang.git#1740db4aeef18b430dc3d64acc660388340da172)": "1wb1j890qhmx3vp87b4h1f509xv0ypjm61psyzwsabik6zszaajv",
   "c-scape 0.6.1 (git+https://github.com/sunfishcode/mustang.git#1740db4aeef18b430dc3d64acc660388340da172)": "1wb1j890qhmx3vp87b4h1f509xv0ypjm61psyzwsabik6zszaajv",
   "mustang 0.6.1 (git+https://github.com/sunfishcode/mustang.git#1740db4aeef18b430dc3d64acc660388340da172)": "1wb1j890qhmx3vp87b4h1f509xv0ypjm61psyzwsabik6zszaajv",
-  "origin 0.6.1 (git+https://github.com/sunfishcode/mustang.git#1740db4aeef18b430dc3d64acc660388340da172)": "1wb1j890qhmx3vp87b4h1f509xv0ypjm61psyzwsabik6zszaajv"
+  "origin 0.6.1 (git+https://github.com/sunfishcode/mustang.git#1740db4aeef18b430dc3d64acc660388340da172)": "1wb1j890qhmx3vp87b4h1f509xv0ypjm61psyzwsabik6zszaajv",
+  "rustix 0.37.0-alpha.0 (git+https://github.com/jordanisaacs/rustix.git?branch=iouring-flags#8fb1fb541a92cd357f5ed92686cb3974f5c1989c)": "0xwxsxij84wk7ych8x1q1r864g96pkrxb44169vdn18m3mlkrgpf",
+  "rustix-uring 0.1.0 (git+https://github.com/jordanisaacs/rustix-uring.git#92b93a36f6c665e13f78f57ee350c34499f8b774)": "0b4yjvbghmyza8bjrm9wc5ilzqv8n1nx6k2c9d5shnw14mkdimh7"
 }
