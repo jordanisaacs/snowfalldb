@@ -1,3 +1,22 @@
+# Userspace/Program Memory
+
+## sbrk vs mmap
+
+[link](https://utcc.utoronto.ca/~cks/space/blog/unix/SbrkVersusMmap)
+
+The highest address is called the *program break*. At program startup it would be the space at the top of the [bss](https://en.wikipedia.org/wiki/.bss): statically allocated variables. `brk()` and `sbrk()` are used to set and increment/decrement the program break respectively. Thus, gives you more memory and creates the *heap*.
+
+In classical unix if you `free()` the right block at the top of the break, `malloc()` might eventually shrink the program break. This was simple linear memory. `mmap()` allowed for easily doing different 'arenas' of memory. Can also be used to directly allocate large objects. Then can drop mappings when unneeded or shrink the arenas. Still called the *heap* even though it is no longer continuous and linear.
+
+## Anatomy of a Program in Memory
+
+[link](https://manybutfinite.com/post/anatomy-of-a-program-in-memory/)
+
+## text, data, and bss: Code and Data Size Explained
+
+[link](https://mcuoneclipse.com/2013/04/14/text-data-and-bss-code-and-data-size-explained/)
+
+
 # Kernel Memory
 
 ## Address Types
@@ -8,11 +27,15 @@
 
 ![](./address-types.png)
 
-## [Kernel GFP Flags](https://lwn.net/Articles/920891/)
+## Kernel GFP Flags
+
+[link](https://lwn.net/Articles/920891/)
 
 They are "get free page" flags, but now used much more widely. But only relevant for *full-page* allocations
 
-## [VMTouch](https://hoytech.com/vmtouch/)
+## VMTouch
+
+[link](https://hoytech.com/vmtouch/)
 
 A tool to learn and control the file-system cache on unix and unix-like systems
 
@@ -26,7 +49,9 @@ Powered by the `mincore` syscall which returns whether pages are in RAM. AKA det
 
 # System Calls
 
-## [Anatomy of a system call, part 1](https://lwn.net/Articles/604287/)
+## Anatomy of a system call, part 1
+
+[link](https://lwn.net/Articles/604287/)
 
 Special instructions are needed to make the processor perform a transition to ring 0.
 Functions are addressed by number rather than address.
@@ -43,7 +68,9 @@ Table is accessed from the [system_call](https://elixir.bootlin.com/linux/v3.14/
 
 ![](./syscall_x86_64.png)
 
-## [Anatomy of a system call part 2](https://lwn.net/Articles/604515/)
+## Anatomy of a system call part 2
+
+[link](https://lwn.net/Articles/604515/)
 
 Lays out how some other arches work and x86\_32 syscalls on x86\_64
 
@@ -59,9 +86,47 @@ TODO
 
 TODO
 
-# Program Startup & ELF
+# Thread Local Storage
 
-## [A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
+## LLVM
+
+[link](https://llvm.org/docs/LangRef.html#thread-local-storage-models)
+
+A variable can be specified as `thread_local` which means each thread will have its own copy of the variable. Not all targets support this. Uses the ELF TLS models.
+
+## Elf Handling for Thread-Local Storage - spec
+
+[link](https://akkadia.org/drepper/tls.pdf)
+
+## A deep dive into (implicit) thread local storage
+
+[link](https://chao-tic.github.io/blog/2018/12/25/tls)
+
+## All about thread-local storage
+
+[link](https://maskray.me/blog/2021-02-14-all-about-thread-local-storage)
+
+# Tracing
+
+## ftrace: trace your kernel #functions
+
+[link](https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/)
+
+# Stack Frames/Unwinding
+
+## Don't panic: guide to rust unwinding
+
+[link](https://lucumr.pocoo.org/2014/10/30/dont-panic/)
+
+## DWARF-based Stack Walking Using eBPF
+
+[link](https://www.polarsignals.com/blog/posts/2022/11/29/profiling-without-frame-pointers/)
+
+# Program Startup
+
+## A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux
+
+[link](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
 
 libc have a `_start` and an `_exit` routine. These provide portability for starting up and ending a program. You can create your own `_start` with the GCC option `-nostartfiles`. You need to call `_exit` though. You can use the GCC option `-nostdlib` to not link any system libraries or startup files.
 
@@ -71,27 +136,30 @@ There is still the ELF file though with a large amount of overhead. There are a 
 
 TODO: finish notes
 
-## [How programs get run: ELF binaries](https://lwn.net/Articles/631631/)
+## How programs get run: ELF binaries
 
-TODO
+[link](https://lwn.net/Articles/631631/)
+
 
 ## `man 5 elf`
 
-TODO
+## Linux x86 Program Start Up - or - How the heck do we get to main()
 
-## [Linux x86 Program Start Up - or - How the heck do we get to main()](http://www.dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
+[link](http://www.dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
 
-TODO
+## `.init, .ctors, and .init_array`
 
-## [`.init, .ctors, and .init_array`](https://maskray.me/blog/2021-11-07-init-ctors-init-array)
+[link](https://maskray.me/blog/2021-11-07-init-ctors-init-array)
 
 Dynamic initializations for non-local variables before the main function. Calls functions in `init_array`. GCC reserves the first 100. Catch violations with `-Wprio-ctor-dtor`.
 
 See [System V ABI](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf) for the generic ABI quote source
 
-## Rust
+## Rust Programs
 
-### [Origin](https://github.com/sunfishcode/mustang/tree/main/origin)
+### Origin
+
+[link](https://github.com/sunfishcode/mustang/tree/main/origin)
 
 Origin for logging uses a function in `.init_array` to set up an `env_logger`. Cannot be used in `no_std`. Need to write your own `.init_array` function
 
@@ -105,9 +173,19 @@ Rust stdlib uses the start function to initialize its [runtime](https://sourcegr
 
 On unix stdlib uses init_array to initialize args because glibc passes argc, argv, and envp to function in the `.init_array`. See [source](https://github.com/rust-lang/rust/blob/6c991b07403a3234dd1ec0ac973b8ef97055e605/library/std/src/sys/unix/args.rs#L109)
 
-# I/O
+# Linux I/O
 
 How much I/O do you want to handle in userspace vs kernel?
+
+## HeuristicDB: A Hybrid Storage Database System Using a Non-Volatile Memory Block Device
+
+[link](https://dl.acm.org/doi/pdf/10.1145/3456727.3463774)
+
+Use NVM storage as a block cache for conventional storage devices
+
+## OPTR: Order-Preserving Translation and Recovery Design for SSDs with a Standard Block Device Interface
+
+[link](https://www.usenix.org/system/files/atc19-chang_0.pdf)
 
 ## Linux Kernel Block Layer
 
@@ -120,7 +198,35 @@ The block layer is the part of the kernel that implements the interface that app
 
 [Linux Kernel Labs - Block Device Drivers](https://linux-kernel-labs.github.io/refs/heads/master/labs/block_device_drivers.html)
 
-## [SPDK](https://spdk.io/doc/)
+### The Necessary Death of the Block Device Interface
+
+[link](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
+
+## NVMe
+
+### Character and Block Device
+
+[link](https://serverfault.com/questions/892134/why-is-there-both-character-device-and-block-device-for-nvme)
+
+The character device `/dev/nvme0` is the NVMe controller. While the block devices eg `/dev/nvme0n1` are storage namespaces. They behave essentially as disks. Erasing the SSD does not erase the namespaces.
+
+### xnvme
+
+[link](https://xnvme.io/)
+
+[Paper](https://dl.acm.org/doi/10.1145/3534056.3534936)
+
+Provides a cross-platform user-space library that is I/O interface independent. Includes backends of its API for SPDK, io_uring, libaio, and more. According to the paper it has negligible cost.
+
+Designed to be rapidly iterable to include new NVMe features.
+
+### Enabling Asynchronous I/O Passthru in NVMe-Native Applications
+
+[link](https://www.snia.org/educational-library/enabling-asynchronous-i-o-passthru-nvme-native-applications-2021)
+
+## SPDK
+
+[link](https://spdk.io/doc/)
 
 **All userspace**
 
@@ -136,31 +242,11 @@ A TiKV article on using SPDK BlobFS: [link](https://www.pingcap.com/blog/tikv-an
 
 [SPDK BDev Performance Report](https://ci.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2209.pdf) - A full block device layer in userspace called `bdev`
 
-## [xnvme](https://xnvme.io/)
-
-[Paper](https://dl.acm.org/doi/10.1145/3534056.3534936)
-
-Provides a cross-platform user-space library that is I/O interface independent. Includes backends of its API for SPDK, io_uring, libaio, and more. According to the paper it has negligible cost.
-
-Designed to be rapidly iterable to include new NVMe features.
-
-## NVMe
-
-### [Character and Block Device](https://serverfault.com/questions/892134/why-is-there-both-character-device-and-block-device-for-nvme)
-
-The character device `/dev/nvme0` is the NVMe controller. While the block devices eg `/dev/nvme0n1` are storage namespaces. They behave essentially as disks. Erasing the SSD does not erase the namespaces.
-
-## [Enabling Asynchronous I/O Passthru in NVMe-Native Applications](https://www.snia.org/educational-library/enabling-asynchronous-i-o-passthru-nvme-native-applications-2021)
-
-TODO
-
-## [HeuristicDB: A Hybrid Storage Database System Using a Non-Volatile Memory Block Device](https://dl.acm.org/doi/pdf/10.1145/3456727.3463774)
-
-Use NVM storage as a block cache for conventional storage devices
-
 ## io-uring
 
-### [ioctl() for io_uring](https://lwn.net/Articles/844875/)
+### ioctl() for io_uring
+
+[link](https://lwn.net/Articles/844875/)
 
 Implement a field in the `file_operations` structure
 
@@ -180,17 +266,9 @@ Handlers should not block. Instead
 2. Return error indicating operation would block
 3. Run it asynchronously and signal completion by calling the given `done()` function
 
-### [io_uring and networking in 2023](https://github.com/axboe/liburing/wiki/io_uring-and-networking-in-2023)
+### io_uring and networking in 2023
 
-TODO
-
-## [The Necessary Death of the Block Device Interface](https://nivdayan.github.io/NecessaryDeath.pdf) *ssd*
-
-TODO
-
-## [OPTR: Order-Preserving Translation and Recovery Design for SSDs with a Standard Block Device Interface](https://www.usenix.org/system/files/atc19-chang_0.pdf)
-
-TODO
+[link](https://github.com/axboe/liburing/wiki/io_uring-and-networking-in-2023)
 
 # Confidential Computing
 
@@ -218,13 +296,13 @@ An attacker can change values in memory without knowing the encryption key - an 
 
 > The basic principle of SEV-SNP integrity is that if a VM is able to read a private (encrypted) page of memory, it must always read the value it last wrote.
 
-### [The Linux SVSM project](https://lwn.net/Articles/921266/)
+### The Linux SVSM project
 
-TODO
+[link](https://lwn.net/Articles/921266/)
 
-### [A Comparison Study of Intel SGX and AMD Memory Encryption Technology](https://caslab.csl.yale.edu/workshops/hasp2018/HASP18_a9-mofrad_slides.pdf)
+### A Comparison Study of Intel SGX and AMD Memory Encryption Technology
 
-TODO
+[link](https://caslab.csl.yale.edu/workshops/hasp2018/HASP18_a9-mofrad_slides.pdf)
 
 # Posix Threads
 
@@ -266,10 +344,11 @@ One issue with c-scape is that it is `libc` compatible so the functions are `ext
 * [A practical look at QEMU's Block Layer Primitives](https://kashyapc.fedorapeople.org/virt/LinuxCon-NA-2016/A-Practical-Look-at-QEMU-Block-Layer-Primitives-LC-NA-2016.pdf)
 * [How to emulate block devices with qemu](https://blogs.oracle.com/post/how-to-emulate-block-devices-with-qemu)
 
-
 # Page Cache/Buffer Manager
 
-## [Are You Sure You Want to Use MMAP in Your Database Management System?](https://db.cs.cmu.edu/mmap-cidr2022/)
+## Are You Sure You Want to Use MMAP in Your Database Management System?
+
+[link](https://db.cs.cmu.edu/mmap-cidr2022/)
 
 1. Transactional Safety
     * OS can flush dirty pages at any time, cannot prevent this
@@ -282,11 +361,15 @@ One issue with c-scape is that it is `libc` compatible so the functions are `ext
     * Each CPU core has its own TLB which can get out of sync with the page table. Thus, OS generally has to interrupt all CPU cores ("TLB Shootdown") when the page table changes.
     * Intra-kernel data structures are a scalability bottleneck
 
-## [LeanStore: In-Memory Data Management Beyond Main Memory](https://db.in.tum.de/~leis/papers/leanstore.pdf)
+## LeanStore: In-Memory Data Management Beyond Main Memory
+
+[link](https://db.in.tum.de/~leis/papers/leanstore.pdf)
 
 *Pointer Swizzling*
 
-## [Virtual-Memory Assisted Buffer Management](https://www.cs.cit.tum.de/fileadmin/w00cfj/dis/_my_direct_uploads/vmcache.pdf)
+## Virtual-Memory Assisted Buffer Management
+
+[link](https://www.cs.cit.tum.de/fileadmin/w00cfj/dis/_my_direct_uploads/vmcache.pdf)
 
 ### VMCache
 
@@ -341,7 +424,9 @@ On startup all pages are in the `Evicted` state
 
 * [Optimistic Lock Coupling: A Scalable and Efficient General-Purpose Synchronization Method](http://sites.computer.org/debull/A19mar/p73.pdf)
 
-## [The ART of Practical Synchronization](https://db.in.tum.de/~leis/papers/artsync.pdf)
+## The ART of Practical Synchronization
+
+[link](https://db.in.tum.de/~leis/papers/artsync.pdf)
 
 > To add support for concurrency, we initially started
 > designing a custom protocol called Read-Optimized Write Exclusion (ROWEX) [ 14 ], which turned out to be
@@ -361,6 +446,7 @@ To Read:
 * [Contention and Space Management in B-Trees](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper21.pdf)
 * [MV-PBT: Multi-Version Index for Large Datasets and HTAP Workloads](https://arxiv.org/pdf/1910.08023.pdf)
 * [Making B+ Trees Cache Conscious in Main Memory](https://dl.acm.org/doi/pdf/10.1145/342009.335449)
+* [An Asymptotically Optimal Multiversion B-tree](https://www.cs.bu.edu/faculty/gkollios/ada17/LectNotes/mvbt.pdf)
 * [Contention and Space Management in B-Trees](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper21.pdf)
 * [Benchmarked against Bw-Tree](https://www.cs.cmu.edu/~huanche1/publications/open_bwtree.pdf)
 * [A survey of b-tree locking techniques](https://15721.courses.cs.cmu.edu/spring2017/papers/06-latching/a16-graefe.pdf)
@@ -373,7 +459,9 @@ Code:
     * Include a b-tree implementation of OLC
 
 
-## [B-trees: More than I thought I'd want to know](https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know/)
+## B-trees: More than I thought I'd want to know
+
+[link](https://benjamincongdon.me/blog/2021/08/17/B-Trees-More-Than-I-Thought-Id-Want-to-Know/)
 
 **Two important quantities**
 
@@ -399,7 +487,9 @@ Basic algorithm
 3. Go back to step 2 if not a leaf
 4. If at leaf, get the data
 
-## [Modern B-Tree Techniques](https://w6113.github.io/files/papers/btreesurvey-graefe.pdf)
+## Modern B-Tree Techniques
+
+[link](https://w6113.github.io/files/papers/btreesurvey-graefe.pdf)
 
 ### Basic B-Trees** (pg. 213-216):
 
@@ -478,7 +568,9 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 * [The Design and Implementation of Modern Column-Oriented Database Systems](https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf)
 * [Adaptive Hybrid Indexes](https://db.in.tum.de/~anneser/ahi.pdf)
 
-##  [Proteus: Autonomous Adapative Storage for Mixed Workloads](https://cs.uwaterloo.ca/~mtabebe/publications/abebeProteus2022SIGMOD.pdf)
+## Proteus: Autonomous Adapative Storage for Mixed Workloads
+
+[link](https://cs.uwaterloo.ca/~mtabebe/publications/abebeProteus2022SIGMOD.pdf)
 
 ### Row Layout
 
@@ -507,15 +599,21 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 
 # Rust Cargo Builds
 
-## [Resolver 2](https://doc.rust-lang.org/cargo/reference/resolver.html#feature-resolver-version-2)
+## Resolver 2
+
+[link](https://doc.rust-lang.org/cargo/reference/resolver.html#feature-resolver-version-2)
 
 Defaults to version 2 when edition is 2021. Features enabled on build-dependencies or proc-macros are not unified when same dependencies are used as a normal dependency. Eg proc-macros won't pull in std for your no_std build.
 
 # Nix Builds
 
-## [Status of lang2nix approaches](https://discourse.nixos.org/t/status-of-lang2nix-approaches/14477?u=snowytrees)
+## Status of lang2nix approaches
 
-## [rust2nix Comparisons](https://discourse.nixos.org/t/cargo2nix-dramatically-simpler-rust-inside-nix/9334/2?u=snowytrees)
+[link](https://discourse.nixos.org/t/status-of-lang2nix-approaches/14477?u=snowytrees)
+
+## rust2nix Comparisons
+
+[link](https://discourse.nixos.org/t/cargo2nix-dramatically-simpler-rust-inside-nix/9334/2?u=snowytrees)
 
 `buildRustCrate` + `crate2nix` is most Nix-native approach. Each crate and its dependent is a separate Nix derivation + output path. Crates only re-compiled when necessary. Output paths can be shared between different rust projects.
 
@@ -530,7 +628,9 @@ the passed `rustc` and `cargo` commands (should be the build)
 
 Target is set in `build-crate.nix` based on the stdenv [source](https://github.com/NixOS/nixpkgs/blob/refs%2Fheads%2Fnixpkgs-unstable/pkgs/build-support/rust/build-rust-crate/build-crate.nix#L24).
 
-## [Cross Compilation - nix.dev](https://nix.dev/tutorials/cross-compilation)
+## Cross Compilation - nix.dev
+
+[link](https://nix.dev/tutorials/cross-compilation)
 
 Build platform: Where executable is built
 
@@ -540,7 +640,9 @@ Target platform (is relevant for compilers): build compiler on *build platform*,
 
 There are a set of predefined host platforms in `pkgsCross` - retrieve platform string with `pkgsCross.<platform>.stdenv.hostPlatform.config`
 
-## [Cross Compilation - nix manual](https://nixos.org/manual/nixpkgs/stable/#chap-cross)
+## Cross Compilation - nix manual
+
+[link](https://nixos.org/manual/nixpkgs/stable/#chap-cross)
 
 ## stdenv/top-level/systems
 
@@ -641,7 +743,9 @@ Note the hack comment, this is because `crate2nix` will attempt to [override](ht
 
 Thanks to [alamgu](https://github.com/alamgu/alamgu) as this was based on/deciphered from their source code.
 
-## [Understanding Nix's String Context](https://shealevy.com/blog/2018/08/05/understanding-nixs-string-context/)
+## Understanding Nix's String Context
+
+[link](https://shealevy.com/blog/2018/08/05/understanding-nixs-string-context/)
 
 > Investigated this when encountering stirng context errors with crate2nix
 
