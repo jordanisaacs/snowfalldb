@@ -1,25 +1,12 @@
-# Userspace/Program Memory
+# Unsorted links
 
-## sbrk vs mmap
+[FAST 23' - Citron: Distributed Rnage Lock Management with One-sided RDMA](https://www.youtube.com/watch?v=_Aegd52O_Hg)
 
-[link](https://utcc.utoronto.ca/~cks/space/blog/unix/SbrkVersusMmap)
+# Memory/Elf/Program Startup
 
-The highest address is called the *program break*. At program startup it would be the space at the top of the [bss](https://en.wikipedia.org/wiki/.bss): statically allocated variables. `brk()` and `sbrk()` are used to set and increment/decrement the program break respectively. Thus, gives you more memory and creates the *heap*.
+## Kernel Memory
 
-In classical unix if you `free()` the right block at the top of the break, `malloc()` might eventually shrink the program break. This was simple linear memory. `mmap()` allowed for easily doing different 'arenas' of memory. Can also be used to directly allocate large objects. Then can drop mappings when unneeded or shrink the arenas. Still called the *heap* even though it is no longer continuous and linear.
-
-## Anatomy of a Program in Memory
-
-[link](https://manybutfinite.com/post/anatomy-of-a-program-in-memory/)
-
-## text, data, and bss: Code and Data Size Explained
-
-[link](https://mcuoneclipse.com/2013/04/14/text-data-and-bss-code-and-data-size-explained/)
-
-
-# Kernel Memory
-
-## Address Types
+### Address Types
 
 1. User virtual addresses: seen by user-space programs. Each proccess has its own virtual address space 2. Physical Addresses: used between processor and system's memory.
 3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
@@ -27,13 +14,13 @@ In classical unix if you `free()` the right block at the top of the break, `mall
 
 ![](./address-types.png)
 
-## Kernel GFP Flags
+### Kernel GFP Flags
 
 [link](https://lwn.net/Articles/920891/)
 
 They are "get free page" flags, but now used much more widely. But only relevant for *full-page* allocations
 
-## VMTouch
+### VMTouch
 
 [link](https://hoytech.com/vmtouch/)
 
@@ -47,7 +34,179 @@ Linux portion that was yanked out of vmtouch: [link](https://gist.github.com/tva
 
 Powered by the `mincore` syscall which returns whether pages are in RAM. AKA detect if the memory will cause a page fault if accessed.
 
-# System Calls
+## Linux Program Startup
+
+### Linux x86 Program Start Up - or - How the heck do we get to main()
+
+[link](http://www.dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
+
+## Process Memory
+
+### Anatomy of a Program in Memory
+
+[link](https://manybutfinite.com/post/anatomy-of-a-program-in-memory/)
+
+Each process (in a multi-tasking OS) has its own memory sandbox, which is a virtual address space. Virtual addresses are mapped to physical memory through page tables, maintained by the kernel (and consulted by the processor). Once VA are enabled, all software including the kernel use it.
+
+Some amount of the VA space must be reserved for the kernel. Because kernel space is flagged in the page table as exlusive to priviliged code (ring 2 or lower). Page fault is triggered if user mode programs try to touch it.
+
+Kernel code is always addressable, ready to handle interrupts/system calls. User-mode memory changes when a process switch happens. A process has distinct bands, ranges of memory addresses, in address space correpsonding to **memory segments**.
+
+![](./prog-memory.png)
+
+### sbrk() is not thread safe
+
+[link](https://lifecs.likai.org/2010/02/sbrk-is-not-thread-safe.html)
+
+### sbrk() vs mmap()
+
+[link](https://utcc.utoronto.ca/~cks/space/blog/unix/SbrkVersusMmap)
+
+The highest address is called the *program break*. At program startup it would be the space at the top of the [bss](https://en.wikipedia.org/wiki/.bss): statically allocated variables. `brk()` and `sbrk()` are used to set and increment/decrement the program break respectively. Thus, gives you more memory and creates the *heap*.
+
+In classical unix if you `free()` the right block at the top of the break, `malloc()` might eventually shrink the program break. This was simple linear memory. `mmap()` allowed for easily doing different 'arenas' of memory. Can also be used to directly allocate large objects. Then can drop mappings when unneeded or shrink the arenas. Still called the *heap* even though it is no longer continuous and linear.
+
+## ELF
+
+### Program Startup
+
+#### A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux
+
+[link](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
+
+libc have a `_start` and an `_exit` routine. These provide portability for starting up and ending a program. You can create your own `_start` with the GCC option `-nostartfiles`. You need to call `_exit` though. You can use the GCC option `-nostdlib` to not link any system libraries or startup files.
+
+Can use the `exit(2)` syscall rather than the libc call.
+
+There is still the ELF file though with a large amount of overhead. There are a variety of different sections that are produced by the assembler.
+
+TODO: finish notes
+
+#### How programs get run: ELF binaries
+
+[link](https://lwn.net/Articles/631631/)
+
+### `man 5 elf`
+
+### ELF Sections
+
+#### text, data, and bss: Code and Data Size Explained*
+
+[link](https://mcuoneclipse.com/2013/04/14/text-data-and-bss-code-and-data-size-explained/)
+
+`.text` has functions & constant data (). In FLASH memory.
+
+`.data` has initialized data. `int32_t x = 1235;` Not constant because can be changed. Counts for RAM & FLASH
+
+`.bss` has uninitialized data. `int32_t x`. Counts for RAM
+
+### Auxiliary Vectors
+
+#### About ELF Auxiliary Vectors*
+
+[link](http://articles.manugarg.com/aboutelfauxiliaryvectors.html)
+
+They are a mechanism to transfer certain kernel level information to the user processes. They are on the process stack after `envp` content, separated by  a null pointer. In C programs can pass `LD_SHOW_AUXV=1` to print out auxiliary vectors.
+
+#### Linux Kernel
+
+`auxp` is filled in [binfmt_elf.c](https://github.com/torvalds/linux/blob/fc89d7fb499b0162e081f434d45e8d1b47e82ece/fs/binfmt_elf.c#L242)
+
+#### Rustix/Origin/Mustang
+
+Rustix uses the `auxp` for params. It takes in `envp` and finds the null pointer separating it from `auxp`. Then it parses it: [link](https://github.com/bytecodealliance/rustix/blob/dd3de92d498f2f2bde6a312d42bbcd810d1db596/src/backend/linux_raw/param/mustang_auxv.rs#L112). This is performed before main in rustix: [link](https://github.com/sunfishcode/mustang/blob/e5c4ff5abd0e29842652b03dfb594cece74ce71b/origin/src/program.rs#LL77C16-L77C16).
+
+### Constructors/Destructors
+
+#### Startup: Backward Constructors
+
+[link](https://web.archive.org/web/20151205101506/https://blog.mozilla.org/tglek/2010/05/27/startup-backward-constructors/)
+
+#### `.init, .ctors, and .init_array`
+
+[link](https://maskray.me/blog/2021-11-07-init-ctors-init-array)
+
+Dynamic initializations for non-local variables before the main function. Calls functions in `init_array`. GCC reserves the first 100. Catch violations with `-Wprio-ctor-dtor`.
+
+See [System V ABI](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf) for the generic ABI quote source
+
+### Thread Locals
+
+#### Elf Handling for Thread-Local Storage - spec
+
+[link](https://akkadia.org/drepper/tls.pdf)
+
+#### LLVM
+
+[link](https://llvm.org/docs/LangRef.html#thread-local-storage-models)
+
+A variable can be specified as `thread_local` which means each thread will have its own copy of the variable. Not all targets support this. Uses the ELF TLS models.
+
+#### All about thread-local storage
+
+[link](https://maskray.me/blog/2021-02-14-all-about-thread-local-storage)
+
+#### A deep dive into (implicit) thread local storage
+
+[link](https://chao-tic.github.io/blog/2018/12/25/tls)
+
+#### alloc-tls - thread local storage for global allocators (rust)
+
+[link](https://github.com/ezrosent/allocators-rs/tree/master/alloc-tls)
+
+(rust) Registering destructors for types that implement `Drop` requires allocation. This causes reentrancy for allocators. `alloc_thread_local!` can detect this
+
+## Rust Programs
+
+### Origin
+
+[link](https://github.com/sunfishcode/mustang/tree/main/origin)
+
+Origin for logging uses a function in `.init_array` to set up an `env_logger`. Cannot be used in `no_std`. Need to write your own `.init_array` function
+
+### main()
+
+Use `#[start]` (tracking [issue](https://github.com/rust-lang/rust/issues/29633)) or override the C `main` function. [Source](https://doc.rust-lang.org/beta/unstable-book/language-features/lang-items.html#writing-an-executable-without-stdlib)
+
+Rust stdlib uses the start function to initialize its [runtime](https://sourcegraph.com/github.com/rust-lang/rust/-/blob/library/std/src/rt.rs?L99%3A39=). A key thing to note is it uses a `panic::catch_unwind`. Panicking from a main function is undefined behavior right now (more notes in tracking issue). Inside it also calls the platform specific init. [unix init](https://sourcegraph.com/github.com/rust-lang/rust/-/blob/library/std/src/sys/unix/mod.rs?L53=).
+
+### init_array and args
+
+On unix stdlib uses init_array to initialize args because glibc passes argc, argv, and envp to function in the `.init_array`. See [source](https://github.com/rust-lang/rust/blob/6c991b07403a3234dd1ec0ac973b8ef97055e605/library/std/src/sys/unix/args.rs#L109)
+
+# Linking
+
+## A ToC of the 20 part linker essay
+
+[link](https://lwn.net/Articles/276782/)
+
+## Linkers and Loaders
+
+[link](https://linker.iecc.com/)
+
+##  A beginner's guide to linkers
+
+[link](https://www.lurklurk.org/linkers/linkers.html#namemangling)
+
+## LLVM Linkage Models
+
+[link](https://llvm.org/docs/LangRef.html#linkage-types)
+
+## Rust linkage feature
+
+[tracking issue](https://github.com/rust-lang/rust/issues/29603)
+
+# Stack Frames/Unwinding
+
+## Don't panic: guide to rust unwinding
+
+[link](https://lucumr.pocoo.org/2014/10/30/dont-panic/)
+
+## DWARF-based Stack Walking Using eBPF
+
+[link](https://www.polarsignals.com/blog/posts/2022/11/29/profiling-without-frame-pointers/)
+
+# Linux System Calls
 
 ## Anatomy of a system call, part 1
 
@@ -86,92 +245,46 @@ TODO
 
 TODO
 
-# Thread Local Storage
+# Tracing/Performance
 
-## LLVM
+Brendan Gregg's Linux Performance - [link](https://www.brendangregg.com/linuxperf.html)
 
-[link](https://llvm.org/docs/LangRef.html#thread-local-storage-models)
+[Performance Superpowers with Enhanced BPF](https://www.youtube.com/watch?v=oc9000dM9-k)
 
-A variable can be specified as `thread_local` which means each thread will have its own copy of the variable. Not all targets support this. Uses the ELF TLS models.
+[Visualizing Performance with Flame Graphs](https://www.youtube.com/watch?v=D53T1Ejig1Q&t=1614s)
 
-## Elf Handling for Thread-Local Storage - spec
+## ptrace
 
-[link](https://akkadia.org/drepper/tls.pdf)
+### Intercepting and emulating system calls with ptrace
 
-## A deep dive into (implicit) thread local storage
+[link](https://nullprogram.com/blog/2018/06/23/)
 
-[link](https://chao-tic.github.io/blog/2018/12/25/tls)
+Ptrace to implement strace & native debuggers (eg gdb). It intercepts system calls. Can observe, mutate, or block them - means you can service the syscalls yourself. Emulate another OS?
 
-## All about thread-local storage
+Can only have one tracer attached to a process at a time, and has higher overhead. On linux x86-64 ptrace(2) has following signature `long ptrace(int request, pid_t pid, void *addr, void *data);`
 
-[link](https://maskray.me/blog/2021-02-14-all-about-thread-local-storage)
+## ftrace
 
-# Tracing
-
-## ftrace: trace your kernel #functions
+### ftrace: trace your kernel #functions
 
 [link](https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/)
 
-# Stack Frames/Unwinding
+### Debugging the kernel using Ftrace
 
-## Don't panic: guide to rust unwinding
+[part 1 - link](https://lwn.net/Articles/365835/)
+[part 2 - link](https://lwn.net/Articles/366796/)
 
-[link](https://lucumr.pocoo.org/2014/10/30/dont-panic/)
+# Systemd
 
-## DWARF-based Stack Walking Using eBPF
+## Systemd by example
 
-[link](https://www.polarsignals.com/blog/posts/2022/11/29/profiling-without-frame-pointers/)
+[link](https://seb.jambor.dev/posts/systemd-by-example-part-1-minimization/)
 
-# Program Startup
+# Posix Shell
 
-## A Whirlwind Tutorial on Creating Really Teensy ELF Executables for Linux
+## Spec
 
-[link](http://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)
-
-libc have a `_start` and an `_exit` routine. These provide portability for starting up and ending a program. You can create your own `_start` with the GCC option `-nostartfiles`. You need to call `_exit` though. You can use the GCC option `-nostdlib` to not link any system libraries or startup files.
-
-Can use the `exit(2)` syscall rather than the libc call.
-
-There is still the ELF file though with a large amount of overhead. There are a variety of different sections that are produced by the assembler.
-
-TODO: finish notes
-
-## How programs get run: ELF binaries
-
-[link](https://lwn.net/Articles/631631/)
-
-
-## `man 5 elf`
-
-## Linux x86 Program Start Up - or - How the heck do we get to main()
-
-[link](http://www.dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
-
-## `.init, .ctors, and .init_array`
-
-[link](https://maskray.me/blog/2021-11-07-init-ctors-init-array)
-
-Dynamic initializations for non-local variables before the main function. Calls functions in `init_array`. GCC reserves the first 100. Catch violations with `-Wprio-ctor-dtor`.
-
-See [System V ABI](https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf) for the generic ABI quote source
-
-## Rust Programs
-
-### Origin
-
-[link](https://github.com/sunfishcode/mustang/tree/main/origin)
-
-Origin for logging uses a function in `.init_array` to set up an `env_logger`. Cannot be used in `no_std`. Need to write your own `.init_array` function
-
-### main()
-
-Use `#[start]` (tracking [issue](https://github.com/rust-lang/rust/issues/29633)) or override the C `main` function. [Source](https://doc.rust-lang.org/beta/unstable-book/language-features/lang-items.html#writing-an-executable-without-stdlib)
-
-Rust stdlib uses the start function to initialize its [runtime](https://sourcegraph.com/github.com/rust-lang/rust/-/blob/library/std/src/rt.rs?L99%3A39=). A key thing to note is it uses a `panic::catch_unwind`. Panicking from a main function is undefined behavior right now (more notes in tracking issue). Inside it also calls the platform specific init. [unix init](https://sourcegraph.com/github.com/rust-lang/rust/-/blob/library/std/src/sys/unix/mod.rs?L53=).
-
-### init_array and args
-
-On unix stdlib uses init_array to initialize args because glibc passes argc, argv, and envp to function in the `.init_array`. See [source](https://github.com/rust-lang/rust/blob/6c991b07403a3234dd1ec0ac973b8ef97055e605/library/std/src/sys/unix/args.rs#L109)
+[link](https://pubs.opengroup.org/onlinepubs/9699919799/)
 
 # Linux I/O
 
@@ -270,6 +383,10 @@ Handlers should not block. Instead
 
 [link](https://github.com/axboe/liburing/wiki/io_uring-and-networking-in-2023)
 
+### Missing manuals - io_uring worker pool
+
+[link](https://blog.cloudflare.com/missing-manuals-io_uring-worker-pool/)
+
 # Confidential Computing
 
 ## [What is Confidential Computing](https://spectrum.ieee.org/what-is-confidential-computing)
@@ -337,12 +454,38 @@ c-scape's [implementation](https://github.com/sunfishcode/mustang/tree/main/c-sc
 
 One issue with c-scape is that it is `libc` compatible so the functions are `extern "C"`. Thus required to switch from Rust to "C" ABI, then back into rust, and then into C-like syscalls. [source](https://github.com/sunfishcode/mustang/issues/123#issue-1283959957)
 
+# Filesystems
+
+## bcachefs
+
+[The Programmer's Guide to bcache](https://bcachefs.org/Architecture/)
+
+[bcachefs: Principles of Operation](https://bcachefs.org/bcachefs-principles-of-operation.pdf)
+
+# Checksums
+
+[Selecting a Checksum algorithm](http://fastcompression.blogspot.com/2012/04/selecting-checksum-algorithm.html)
+
 # QEMU
 
 ## Block Devices
 
 * [A practical look at QEMU's Block Layer Primitives](https://kashyapc.fedorapeople.org/virt/LinuxCon-NA-2016/A-Practical-Look-at-QEMU-Block-Layer-Primitives-LC-NA-2016.pdf)
 * [How to emulate block devices with qemu](https://blogs.oracle.com/post/how-to-emulate-block-devices-with-qemu)
+
+# Concurrency
+
+[What every systems programmer should know about concurrency](https://assets.bitbashing.io/papers/concurrency-primer.pdf)
+
+## Memory models
+
+[Understanding memory reordering](https://www.internalpointers.com/post/understanding-memory-ordering)
+
+[Memory Consistency Models: A Tutorial](https://www.cs.utexas.edu/~bornholt/post/memory-models.html)
+
+[Cache coherency primer](https://fgiesen.wordpress.com/2014/07/07/cache-coherency/)
+
+[std::memory_order](https://en.cppreference.com/w/cpp/atomic/memory_order)
 
 # Page Cache/Buffer Manager
 
@@ -597,6 +740,8 @@ with Persistent Memory](http://www.cs.utah.edu/~lifeifei/papers/lsmnvm-vldb21.pd
 
 [Internals](https://www.interdb.jp/pg/)
 
+[PostgreSQL 14 Internals](https://edu.postgrespro.com/postgresql_internals-14_en.pdf)
+
 # Rust Cargo Builds
 
 ## Resolver 2
@@ -750,6 +895,26 @@ Thanks to [alamgu](https://github.com/alamgu/alamgu) as this was based on/deciph
 > Investigated this when encountering stirng context errors with crate2nix
 
 Nix tracks the dependency information is associated with strings themselves. Stored as metadata known as **string context**
+
+# CI/CD on Nix
+
+## Hydra
+
+[manual](https://hydra.nixos.org/build/196107287/download/1/hydra/installation.html)
+
+[How to Use Hydra as your Deployment Source of Truth](https://determinate.systems/posts/hydra-deployment-source-of-truth)
+
+## Alternatives
+
+[A nix-native CI setup with buildbot](https://discourse.nixos.org/t/a-nix-native-ci-setup-with-buildbot/20566?u=snowytrees)
+
+## NixOS Tests
+
+[nixos manual](https://nixos.org/manual/nixos/stable/index.html#sec-writing-nixos-tests)
+
+[How to use nixos for lightweight integration tests](https://www.haskellforall.com/2020/11/how-to-use-nixos-for-lightweight.html)
+
+[Make your QEMU 10 times faster with this one weird trick](https://linus.schreibt.jetzt/posts/qemu-9p-performance.html)
 
 # SnowfallDB Design
 
