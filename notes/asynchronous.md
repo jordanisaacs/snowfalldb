@@ -30,3 +30,12 @@ Handlers should not block. Instead
 
 [link](https://blog.cloudflare.com/missing-manuals-io_uring-worker-pool/)
 
+## Exploits
+
+### CVE-2022-1786
+
+[link](https://blog.kylebot.net/2022/10/16/CVE-2022-1786/)
+
+### CVE-2022-29582
+
+[link](https://ruia-ruia.github.io/2022/08/05/CVE-2022-29582-io-uring/)
