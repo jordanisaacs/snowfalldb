@@ -1,3 +1,7 @@
+# Program Notes
+
+These notes cover everything related to programs themselves. How they are run, memory addressing, elf, etc.
+
 # Kernel Memory
 
 ## Address Types
@@ -6,7 +10,7 @@
 3. Kernel logical addresses: Normal address space of the kernel. `kmalloc` returns kernel logical addresses. Treated as physical addresses (usually differ by a constant offset). Macro `__pa()` in `<asm/page.h` returns the associated physical address.
 4. Kernel virtual addresses: do not necessary have a linear one to one mapping to physical addresses. All logical addresses _are_ vritual addresses. `vmalloc` returns a virtual address (but no direct physical mapping)
 
-![](./address-types.png)
+![](./photos/address-types.png)
 
 ## Kernel GFP Flags
 
@@ -32,7 +36,7 @@ Some amount of the VA space must be reserved for the kernel. Because kernel spac
 
 Kernel code is always addressable, ready to handle interrupts/system calls. User-mode memory changes when a process switch happens. A process has distinct bands, ranges of memory addresses, in address space correpsonding to **memory segments**.
 
-![](./prog-memory.png)
+![](./photos/prog-memory.png)
 
 ## sbrk() is not thread safe
 
@@ -188,6 +192,10 @@ On unix stdlib uses init_array to initialize args because glibc passes argc, arg
 
 [link](https://www.polarsignals.com/blog/posts/2022/11/29/profiling-without-frame-pointers/)
 
+## Unwinding the stack the hard way
+
+[link](https://lesenechal.fr/en/linux/unwinding-the-stack-the-hard-way)
+
 # Linux System Calls
 
 ## Anatomy of a system call, part 1
@@ -207,7 +215,7 @@ Early in the kernel's [startup](https://elixir.bootlin.com/linux/v3.14/source/ar
 
 Table is accessed from the [system_call](https://elixir.bootlin.com/linux/v3.14/source/arch/x86/kernel/entry_64.S#L593) assembly entry point. Pushes various registers onto stack using `SAVE_ARGS` macro to match `asmlinkage` directive. Uses the RAX register to pick entry and then calls it.
 
-![](./syscall_x86_64.png)
+![](./photos/syscall_x86_64.png)
 
 ## Anatomy of a system call part 2
 
@@ -243,11 +251,6 @@ Links:
 
 My port of musl setjmp/longjmp to rust: [sjlj](https://github.com/jordanisaacs/sjlj)
 
-Safety of setjmp/longjmp in Rust:
-
-* The [Plain Old Frame](https://blog.rust-lang.org/inside-rust/2021/01/26/ffi-unwind-longjmp.html) are frames that can be trivially deallocated. A function that calls `setjmp` cannot have any destructors.
-* Also take care for [returning twice](https://github.com/rust-lang/rfcs/issues/2625) and doing volatile read/writes if that is the case
-
 From [anonymous]: 
 
 > you can't longjmp in a signal handler because you need to either hit the return trampoline
@@ -264,3 +267,8 @@ Tidbit on the return trampoline
 > and im pretty sure libcs just have their sigaction etc always set SA_RESTORER to their sigreturn trampoline
 
 Do not need to care about the trampoline because not using libc. At least in musl, the `SA_RESTORER` function is just the `sigreturn` syscall. It is not necessary to call `sigreturn` from a signal. It seems that the handler is not called if no `SA_RESTORER` is provided so just do it like musl with a single call to `sigreturn`.
+
+## Safety of setjmp/longjmp in Rust:
+
+* The [Plain Old Frame](https://blog.rust-lang.org/inside-rust/2021/01/26/ffi-unwind-longjmp.html) are frames that can be trivially deallocated. A function that calls `setjmp` cannot have any destructors.
+* Also take care for [returning twice](https://github.com/rust-lang/rfcs/issues/2625) and doing volatile read/writes if that is the case

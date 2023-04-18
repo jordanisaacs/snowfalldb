@@ -84,31 +84,6 @@ Designed to be rapidly iterable to include new NVMe features.
 
 [Selecting a Checksum algorithm](http://fastcompression.blogspot.com/2012/04/selecting-checksum-algorithm.html)
 
-
-# Distributed Storage
-
-This is outside the database (assuming separated storage & compute). The database would be interacting with this outside storage system (most likely in object storage form using an S3 compatible API)
-
-## Ceph
-
-Distributed storage system
-
-### Bluestore
-
-#### Block cache with Bluestore
-
-[link](http://bos.itdks.com/f422ee718b914181b58559fb1f5474cb.pdf)
-
-#### Configuring Bluestore
-
-[link](https://docs.ceph.com/en/latest/rados/configuration/bluestore-config-ref/)
-
-# Separating Storage & Compute
-
-## Neon
-
-[link](https://neon.tech/blog/architecture-decisions-in-neon)
-
 # Page Cache
 
 ## Are You Sure You Want to Use MMAP in Your Database Management System?
@@ -179,8 +154,6 @@ Need an additional data structure for synchronization because:
 
 A contiguous array with as many page state entries as pages on storage
 
-![](./vmcache-ds.png)
-
 #### Page States
 
 On startup all pages are in the `Evicted` state
@@ -189,6 +162,10 @@ On startup all pages are in the `Evicted` state
 
 * [The Design and Implementation of Modern Column-Oriented Database Systems](https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf)
 * [Adaptive Hybrid Indexes](https://db.in.tum.de/~anneser/ahi.pdf)
+
+## Mainlining Databases: Supporting Fast Transactional Workloads on Universal Columnar Data File Formats
+
+[link](https://arxiv.org/pdf/2004.14471.pdf)
 
 ## Proteus: Autonomous Adapative Storage for Mixed Workloads
 
@@ -214,7 +191,6 @@ On startup all pages are in the `Evicted` state
 * Buffers updates in memory and batch applies them
 
 * [](https://cs.uwaterloo.ca/~mtabebe/publications/abebeThesis2022UW.pdf)
-
 
 # Postgres Design
 

@@ -1,5 +1,87 @@
-- Delegate storage to an object store with S3 compatible API (eg Ceph)
-- Page cache would be handled using exmap
+Goals:
+* Separation of storage + compute
+* Within compute, separation of compute + memory
+* Scalable compute from 0
+* Highly durable & available
+* Low latency
+
+# Coordination Servers
+
+* Routes queries to the correct compute cluster
+* Load balances queries across the compute cluster nodes
+* Some sort of consensus algorithm determines the leader
+    * Coordination leader handles compute cluster failovers
+
+# Partition Clusters
+
+* Each partition cluster sits within a single datacenter (due to RDMA)
+* Can handle 0-all partitions
+* If multiple partition clusters, then shared-nothing between them
+
+* Cluster uses a cached & sharded distributed shared-memory layer
+    * Does not need cache coherency protocol
+    * Needs some sort of cross-shard transaction strategy (distributed commit?)
+* Compute Node
+    * Handles at least one logical shard
+* Memory Nodes
+    * Distributed memory system through RDMA
+    * Asynchronous object store uploading is offloaded to the memory node
+* Storage Nodes
+    * 
+* Durability
+    * Synchronous
+        * Replicate to other partition clusters if exists
+        * Replicate it to the storage cluster
+    * Asynchronously
+        * Writes to the storage node
+        * Uploads to cloud storage
+* Availability
+    * Memory node crashes then can failover to a replicated memory node
+    * Full memory
+* Multi-writer - through DSM
+* Storage Nodes
+    * On its own RDMA distributed storage system
+    * Replicate *k* copies of memory across nodes
+        * Upon recieving an RDMA write the node asynchronously writes it to disk
+    * Storage nodes periodically turn logs into pages
+* Compute Nodes
+* Storage cluster
+    * For memory disaggregation
+    * Memory servers with few cpus and mostly memory
+    * Connected through rdma to compute servers
+    * Also contains NVMe disks
+    * Availability
+        * Write transactions asynchronously to blob storage & local NVMe disks
+        * Recovery can come from both blob storage & local NVMe disks
+    * Handles asynchronously performing replication to 
+    * Exposes a unified API for page access - hides the underlying distributed memory/storage
+        * Eg. "One Buffer manager to rule them all" paper
+        * Asynchronous memory access, loads it into hot data if not there
+        * Memory hierarchies:
+            * Hot data - in-memory
+            * Warm data - on-disk
+            * Cold data - object storage
+* Compute cluster
+    * Local dram serves as a cache of the memory servers
+    * Connects to the storage cluster with RDMA
+
+# Page Layout
+
+TBD
+
+# Index
+
+* Fractal tree based (cache-oblivious or B-epsilon?)
+* Combine it with stratified versioned b-trees?
+
+# Concurrency Control
+
+TBD
+
+## Consensus
+
+2PC, etc. TBD
+
 
 # Logging
 

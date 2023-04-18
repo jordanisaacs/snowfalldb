@@ -1,4 +1,10 @@
-# [What is Confidential Computing](https://spectrum.ieee.org/what-is-confidential-computing)
+# Confidential Computing Notes
+
+These notes cover what confidential computing, implementations, and uses
+
+## What is confidential Computing
+
+[link](https://spectrum.ieee.org/what-is-confidential-computing)
 
 Confidential computing is about protecting data while in use. So malware can't just dump your memory while you are computing on it. This is important for cloud computing because when you don't control the datacenter and hardware, you can't trust that the host OS isn't compromised.
 
@@ -8,7 +14,9 @@ Confidential computing is about protecting data while in use. So malware can't j
 
 * [AMD Developer Page](https://developer.amd.com/sev/)
 
-## [AMD SEV-SNP Whitepaper](https://www.amd.com/system/files/TechDocs/SEV-SNP-strengthening-vm-isolation-with-integrity-protection-and-more.pdf)
+## AMD SEV-SNP Whitepaper
+
+[link](https://www.amd.com/system/files/TechDocs/SEV-SNP-strengthening-vm-isolation-with-integrity-protection-and-more.pdf)
 
 SEV (Secure Encrypted Virtualization) enabled main memory encryption. Individual VMs could be assigned unique AES encryption keys to encrypt in-use data. When the hypervisor tries to read memory inside a guest, only sees encrypted bytes.
 

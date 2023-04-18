@@ -1,3 +1,7 @@
+# Nix notes
+
+This covers everything Nix/Nixpkgs/Nixos related. Packaging, CI, etc.
+
 # Packaging Software
 
 ## Status of lang2nix approaches
