@@ -197,7 +197,7 @@
         # KERNEL_VERSION = kernel.modDirVersion;
         nativeBuildInputs =
           nativeBuildInputs
-          ++ [neovim.neovim];
+          ++ [neovim];
       }
       // rustEnv);
   };

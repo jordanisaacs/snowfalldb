@@ -1,39 +1,40 @@
 {
   config = {
+    vim.languages = {
+      enableLSP = true;
+      enableTreesitter = true;
+      nix.enable = true;
+      rust.enable = true;
+      clang.enable = true;
+      markdown.enable = true;
+
+      rust.lsp.opts = ''
+        ["rust-analyzer"] = {
+          check = {
+            targets = "x86_64-mustang-linux-gnu",
+            extraArgs = { "-Zbuild-std=core,alloc,test,std" },
+            allTargets = false,
+          },
+        },
+      '';
+    };
     vim.lsp = {
       enable = true;
       lightbulb.enable = true;
       lspSignature.enable = true;
       trouble.enable = true;
+      lspkind.enable = true;
       nvimCodeActionMenu.enable = true;
       formatOnSave = true;
-      rust = {
-        enable = true;
-        rustAnalyzerOpts = ''
-          ["rust-analyzer"] = {
-            check = {
-              targets = "x86_64-mustang-linux-gnu",
-              extraArgs = { "-Zbuild-std=core,alloc,test,std" },
-              allTargets = false,
-            },
-          },
-        '';
-      };
-      clang.enable = true;
-      nix.enable = true;
     };
-    vim.statusline.lualine = {
-      enable = true;
-      theme = "onedark";
-    };
+    vim.statusline.lualine.enable = true;
     vim.visuals = {
       enable = true;
       nvimWebDevicons.enable = true;
-      lspkind.enable = true;
       indentBlankline = {
         enable = true;
-        fillChar = "";
-        eolChar = "";
+        fillChar = null;
+        eolChar = null;
         showCurrContext = true;
       };
       cursorWordline = {
@@ -57,13 +58,7 @@
     vim.telescope = {
       enable = true;
     };
-    vim.markdown = {
-      enable = true;
-      glow.enable = true;
-    };
     vim.treesitter = {
-      enable = true;
-      autotagHtml = true;
       context.enable = true;
     };
     vim.keys = {
